@@ -2,6 +2,8 @@
 
 **Full-day hands-on workshop — Revision 1.1 — 09/15/26**
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/skillrepos/handsai?quickstart=1)
+
 AI agents become useful when they can act. In this workshop you build a practical AI agent
 that uses tools through two different execution surfaces — command-line interfaces and the
 Model Context Protocol (MCP) — and learn when each one is the right engineering choice.
@@ -20,8 +22,7 @@ Over ten short labs (10–12 minutes each) you will:
 
 The easiest way to run the labs is with **GitHub Codespaces**:
 
-1. Click the **Code** button on the repository page, then the **Codespaces** tab.
-2. Click **Create codespace on main**.
+1. Click the **Open in GitHub Codespaces** button above (or the **Code** button → **Codespaces** tab → **Create codespace on main**).
 3. Wait for the environment to build (3–5 minutes). The setup installs Python dependencies,
    installs Ollama, and pulls the `llama3.2:3b` model automatically.
 4. When the terminal shows `Ollama ready with llama3.2:3b.`, you're set. Open `labs.md`
