@@ -1,6 +1,6 @@
 # Hands of AI — Building AI Agents That Act: Tools via CLIs and MCP
 
-**Full-day hands-on workshop — Revision 1.5 — 09/20/26**
+**Full-day hands-on workshop — Revision 1.6 — 09/20/26**
 
 AI agents become useful when they can act. In this workshop you build a practical AI agent
 that uses tools through two different execution surfaces — command-line interfaces and the
@@ -30,7 +30,7 @@ scroll down on that page until you see the *Default idle timeout* section. Adjus
 value as desired.
 
 ![Changing codespace idle timeout value](./images/hoa-setup-timeout.png?raw=true "Changing codespace idle timeout value")
-
+t
 <br><br>
 
 **2. Click on the button below to start a new codespace from this repository.**
@@ -39,7 +39,7 @@ Click here ➡️  [![Open in GitHub Codespaces](https://github.com/codespaces/b
 
 <br><br>
 
-**3. Then click on the option to create a new codespace.**
+**3. Then click on tht option to create a new codespace.**
 
 ![Creating new codespace from button](./images/hoa-setup-create.png?raw=true "Creating new codespace from button")
 
@@ -112,7 +112,7 @@ To confirm the key works and the labs' model is reachable, run:
 bash scripts/check-groq.sh
 ```
 
-You should see `OK    labs model  ->  qwen/qwen3.8-27b`. If it reports `FAIL` because
+You should see `OK` and a list of models that includes qwen/qwen3.8-27b`. If it reports `FAIL` because
 Groq has retired that model, the script checks replacements for you and prints the exact
 `export GROQ_MODEL=...` line to run — or tells you to go back to the local model.
 
@@ -122,9 +122,6 @@ To switch back to the local model at any time:
 source scripts/setup-key.sh --remove
 ```
 
-*Alternative:* store the key as a **Codespace secret** named `GROQ_API_KEY`
-(https://github.com/settings/codespaces) before creating the codespace; it is then set in
-every terminal automatically and step 5 isn't needed.
 
 <br><br>
 
