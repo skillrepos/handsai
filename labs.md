@@ -1,7 +1,7 @@
 # Hands of AI
 ## Building AI Agents That Act: Tools via CLIs and MCP
 ## Full-day workshop labs
-## Revision 1.3 - 09/20/26
+## Revision 1.4 - 09/20/26
 
 **Startup: You need a running GitHub Codespace created from this repository (see README.md). Setup installs Python, Ollama, and the llama3.2:3b model automatically (3-5 minutes). Verify with:**
 
@@ -17,7 +17,7 @@ python --version
 
 **NOTES:**
 - **Run all commands from the repository root unless a step says otherwise.**
-- **Local model responses can take 30 seconds to 2+ minutes — be patient. For faster runs, set a free Groq API key (see README.md): `export GROQ_API_KEY=<your key>`. Every lab uses it automatically.**
+- **Local model calls take 5-10 seconds each, so an agent run is typically 30-90 seconds — be patient. For ~1-second responses, set up a free Groq API key (README.md Setup steps 4-5): `source scripts/setup-key.sh`. Every lab uses it automatically; `source scripts/setup-key.sh --remove` switches back.**
 - **The scenario all day: you're building an on-call engineer's assistant. A small inventory service in `sample_app/` has a failing nightly report. Your agent will gain the tools to investigate it — and by the end, guardrails so you can trust it to act.**
 </br></br>
 

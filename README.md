@@ -1,8 +1,6 @@
 # Hands of AI — Building AI Agents That Act: Tools via CLIs and MCP
 
-**Full-day hands-on workshop — Revision 1.3 — 09/20/26**
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/skillrepos/handsai?quickstart=1)
+**Full-day hands-on workshop — Revision 1.4 — 09/20/26**
 
 AI agents become useful when they can act. In this workshop you build a practical AI agent
 that uses tools through two different execution surfaces — command-line interfaces and the
@@ -20,38 +18,121 @@ Over ten short labs (10–12 minutes each) you will:
 
 ## Setup
 
-The easiest way to run the labs is with **GitHub Codespaces**:
+These instructions will guide you through configuring a GitHub Codespaces environment
+that you can use to run the course labs.
 
-1. Click the **Open in GitHub Codespaces** button above (or the **Code** button → **Codespaces** tab → **Create codespace on main**).
-2. Wait for the environment to build (3–5 minutes). The setup installs Python dependencies,
-   installs Ollama, and pulls the `llama3.2:3b` model automatically.
-3. When the terminal shows `Ollama ready with llama3.2:3b.`, you're set. Open `labs.md`
-   and start with Lab 1.
+<br><br>
 
-## Optional: using a larger model via Groq (free)
+**1. Change your codespace's default timeout from 30 minutes to longer.**
 
-The labs run entirely on the local `llama3.2:3b` model by default. Small models occasionally
-make formatting mistakes when choosing tools — that's part of what we discuss in the workshop.
-If you'd like faster and more reliable responses, you can use a **free Groq API key**:
+To do this, when logged in to GitHub, go to https://github.com/settings/codespaces and
+scroll down on that page until you see the *Default idle timeout* section. Adjust the
+value as desired.
 
-1. Create a free account at https://console.groq.com and generate an API key.
-2. In your Codespace terminal:
+![Changing codespace idle timeout value](./images/hoa-setup-timeout.png?raw=true "Changing codespace idle timeout value")
+
+<br><br>
+
+**2. Click on the button below to start a new codespace from this repository.**
+
+Click here ➡️  [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/skillrepos/handsai?quickstart=1)
+
+<br><br>
+
+**3. Then click on the option to create a new codespace.**
+
+![Creating new codespace from button](./images/hoa-setup-create.png?raw=true "Creating new codespace from button")
+
+This will run for several minutes while it gets everything ready.
+
+If VS Code shows a workspace trust prompt, click **Trust Folder & Continue**.
+
+![Trust workspace](./images/hoa-setup-trust.png?raw=true "Trust workspace")
+
+After the initial startup, it will run a script to set up the Python environment, install
+Ollama, and download the `llama3.2:3b` model. This takes several more minutes. The
+codespace is ready when the terminal shows `Ollama ready with llama3.2:3b.` and a prompt.
+Verify with:
 
 ```
-export GROQ_API_KEY=<your key>
+ollama list
 ```
 
-Every lab program automatically uses Groq's `qwen/qwen3.8-27b` model when
-`GROQ_API_KEY` is set, and the local Ollama model otherwise. That model was chosen
-because it reliably follows the labs' "reply with a JSON action" convention; Groq's
-`openai/gpt-oss-*` models insist on native function calling and reject it. (You can
-pick a different Groq model by also setting `GROQ_MODEL`.) In a Codespace you can
-store the key as a **Codespace secret** named `GROQ_API_KEY` instead of exporting it.
-To switch back:
+![Model and Python verified](./images/hoa-setup-1.png?raw=true "Model and Python verified")
+
+<br><br>
+
+**4. (Recommended) Get a free API key for Groq to use a larger, faster model.**
+
+The labs run entirely on the local `llama3.2:3b` model by default, and everything works
+that way. But local model calls take 5-10 seconds each on a codespace, and a small model
+occasionally gives a muddled answer — part of what we discuss in the workshop. Groq hosts
+a larger model for free (no credit card) that answers in about a second. Labs 7 and 10,
+which run several agents back to back, are noticeably nicer with it.
+
+a. In a browser, go to https://console.groq.com and create an account. (If you get an
+email with a confirmation button, make sure the link opens in the same browser you used
+for Groq. If not, copy the link from the "click here" section and paste it into the right
+browser.)
+
+b. In the top right of the Groq screen, click on **API Keys**
+
+![API keys](./images/hoa-groq-1.png?raw=true "API keys")
+
+c. Then click the **Create API Key** button.
+
+![Create API Key](./images/hoa-groq-2.png?raw=true "Create API Key")
+
+d. Fill in the information, verify you're human if asked, and click **Submit**.
+
+![Create API Key](./images/hoa-groq-3.png?raw=true "Create API Key")
+
+e. **Copy the key** (you can't view it again later).
+
+![Copy the key](./images/hoa-groq-4.png?raw=true "Copy the key")
+
+<br><br>
+
+**5. Set up your Groq key in your codespace.**
+
+Back in the codespace **TERMINAL**, run the command below to set your key for this and
+all future terminals. Paste your key when prompted and hit *Enter*:
 
 ```
-unset GROQ_API_KEY
+source scripts/setup-key.sh
 ```
+
+You should see `Done! GROQ_API_KEY is set ...`. Every lab program checks that variable:
+set means Groq's `qwen/qwen3.8-27b` model, unset means the local Ollama model. The
+setting persists across new terminals and codespace restarts.
+
+To confirm the key works and the labs' model is reachable, run:
+
+```
+bash scripts/check-groq.sh
+```
+
+You should see `OK    labs model  ->  qwen/qwen3.8-27b`. If it reports `FAIL` because
+Groq has retired that model, the script checks replacements for you and prints the exact
+`export GROQ_MODEL=...` line to run — or tells you to go back to the local model.
+
+To switch back to the local model at any time:
+
+```
+source scripts/setup-key.sh --remove
+```
+
+*Alternative:* store the key as a **Codespace secret** named `GROQ_API_KEY`
+(https://github.com/settings/codespaces) before creating the codespace; it is then set in
+every terminal automatically and step 5 isn't needed.
+
+<br><br>
+
+**6. Open `labs.md` and start with Lab 1.**
+
+Right-click `labs.md` in the Explorer and choose **Open Preview** for the rendered version.
+
+<br><br>
 
 ## System requirements (local alternative)
 
@@ -73,7 +154,7 @@ If you prefer to run locally instead of in a Codespace, you need:
 | `eval/` | Evaluation harness and scenarios for Lab 10 |
 | `sample_app/` | The small application (with a bug!) that your agent investigates all day |
 | `extra/` | Completed versions of lab code used in the diff-merge steps |
-| `scripts/` | Environment setup scripts |
+| `scripts/` | Setup scripts: Ollama install/start, `setup-key.sh` (Groq key), `check-groq.sh` |
 | `labs.md` | **The lab guide — start here** |
 
 ## Troubleshooting
@@ -81,10 +162,12 @@ If you prefer to run locally instead of in a Codespace, you need:
 - **Ollama responses are slow**: on a 4-core Codespace each model call takes 3–10 seconds once
   the model is loaded (an agent run is typically 30–90 seconds; the eval suite ~2 minutes). The
   very first call after a Codespace starts can take up to 2 minutes while the model loads —
-  the setup scripts pre-load it and keep it in memory. For instant responses use Groq (above).
+  the setup scripts pre-load it and keep it in memory. For ~1 s responses use Groq (Setup step 4).
 - **Agent ends with "Gave up: reached max steps"**: the model kept calling tools instead of
   answering. Every observation now carries a finish reminder (`observation_message` in
   `agents/llm.py`); if you still see this on the local model, re-run once or switch to Groq.
+- **Groq key not picked up in a new terminal**: run `source scripts/setup-key.sh` again — it
+  writes the key to `~/.bashrc` so every new terminal has it. `echo $GROQ_API_KEY` to check.
 - **`address already in use` / stuck server**: `pkill ollama` then `bash scripts/startOllama.sh`
 - **Model not found**: `ollama pull llama3.2:3b`
 - **`ollama: command not found`** after setup: the Ollama installer needs `zstd`, which
