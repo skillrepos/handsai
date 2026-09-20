@@ -17,9 +17,9 @@ import json
 import os
 import sys
 
-from llm import chat, extract_json, which_backend
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from llm import chat, extract_json, observation_message, which_backend
+from mcp import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, REPO_ROOT)
@@ -40,7 +40,7 @@ def build_system_prompt(tools):
         description = (tool.description or "").strip().splitlines()
         first_line = description[0] if description else "(no description)"
         lines.append(f"- {tool.name}: {first_line}")
-        lines.append(f"  input schema: {json.dumps(tool.inputSchema)}")
+        lines.append(f"  input schema: {json.dumps(tool.input_schema)}")
     lines += [
         "",
         "To use a tool, reply with ONLY a JSON object like:",
@@ -84,7 +84,7 @@ async def run_agent(task, server_script=DEFAULT_SERVER, max_steps=8):
             await session.initialize()
             tools = (await session.list_tools()).tools
             tool_names = {tool.name for tool in tools}
-            schemas = {tool.name: tool.inputSchema for tool in tools}
+            schemas = {tool.name: tool.input_schema for tool in tools}
             print(f"[backend: {which_backend()}] [server: {server_script}]")
             print(f"[discovered tools: {', '.join(sorted(tool_names))}]")
             audit("session_start", task=task, tools=sorted(tool_names))
@@ -112,9 +112,9 @@ async def run_agent(task, server_script=DEFAULT_SERVER, max_steps=8):
                 else:
                     observation = await guarded_call(session, schemas, tool_name, args)
                 print(f"--- step {step}: {tool_name}({json.dumps(args)})")
-                print(f"    observation: {observation[:200]}")
+                print(f"    observation: {' '.join(observation.split())[:200]}")
                 messages.append({"role": "assistant", "content": json.dumps(action)})
-                messages.append({"role": "user", "content": f"Observation:\n{observation}"})
+                messages.append({"role": "user", "content": observation_message(observation, max_steps - step)})
             print("\n=== Gave up: reached max steps without a final answer ===")
             audit("session_end", final=None)
             return None

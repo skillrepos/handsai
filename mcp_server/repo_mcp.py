@@ -2,7 +2,7 @@
 
 The Model Context Protocol gives tools a standard, discoverable surface:
 each tool has a name, a description (from the docstring), and a typed
-input schema (from the type hints) — all generated for us by FastMCP.
+input schema (from the type hints) — all generated for us by MCPServer.
 
 Note what we did NOT have to write: no argument parser, no JSON
 formatting conventions, no help text. The protocol carries all of that.
@@ -18,11 +18,11 @@ import sys
 # Make the repo root importable so we can reuse the Lab 3 logic
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from cli_tools.repo_tool import do_log_summary, do_search, do_tests, do_ticket
 
-mcp = FastMCP("repo-tools")
+mcp = MCPServer("repo-tools")
 
 
 @mcp.tool()

@@ -19,11 +19,11 @@ Run it with the test client:
 import os
 import subprocess
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-mcp = FastMCP("git-tools")
+mcp = MCPServer("git-tools")
 
 # Read-only subcommands the escape hatch may run — nothing that writes.
 ALLOWED_SUBCOMMANDS = {"log", "show", "status", "branch", "shortlog"}

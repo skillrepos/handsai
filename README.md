@@ -1,6 +1,6 @@
 # Hands of AI — Building AI Agents That Act: Tools via CLIs and MCP
 
-**Full-day hands-on workshop — Revision 1.1 — 09/15/26**
+**Full-day hands-on workshop — Revision 1.3 — 09/20/26**
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/skillrepos/handsai?quickstart=1)
 
@@ -23,9 +23,9 @@ Over ten short labs (10–12 minutes each) you will:
 The easiest way to run the labs is with **GitHub Codespaces**:
 
 1. Click the **Open in GitHub Codespaces** button above (or the **Code** button → **Codespaces** tab → **Create codespace on main**).
-3. Wait for the environment to build (3–5 minutes). The setup installs Python dependencies,
+2. Wait for the environment to build (3–5 minutes). The setup installs Python dependencies,
    installs Ollama, and pulls the `llama3.2:3b` model automatically.
-4. When the terminal shows `Ollama ready with llama3.2:3b.`, you're set. Open `labs.md`
+3. When the terminal shows `Ollama ready with llama3.2:3b.`, you're set. Open `labs.md`
    and start with Lab 1.
 
 ## Optional: using a larger model via Groq (free)
@@ -41,9 +41,13 @@ If you'd like faster and more reliable responses, you can use a **free Groq API 
 export GROQ_API_KEY=<your key>
 ```
 
-Every lab program automatically uses Groq's `openai/gpt-oss-120b` model when
-`GROQ_API_KEY` is set, and the local Ollama model otherwise. (You can pick a different
-Groq model by also setting `GROQ_MODEL`.) To switch back:
+Every lab program automatically uses Groq's `qwen/qwen3.8-27b` model when
+`GROQ_API_KEY` is set, and the local Ollama model otherwise. That model was chosen
+because it reliably follows the labs' "reply with a JSON action" convention; Groq's
+`openai/gpt-oss-*` models insist on native function calling and reject it. (You can
+pick a different Groq model by also setting `GROQ_MODEL`.) In a Codespace you can
+store the key as a **Codespace secret** named `GROQ_API_KEY` instead of exporting it.
+To switch back:
 
 ```
 unset GROQ_API_KEY
@@ -74,10 +78,23 @@ If you prefer to run locally instead of in a Codespace, you need:
 
 ## Troubleshooting
 
-- **Ollama responses are slow**: expected on a 4-core Codespace — local model calls can take
-  30 seconds to 2+ minutes. Consider the Groq option above.
+- **Ollama responses are slow**: on a 4-core Codespace each model call takes 3–10 seconds once
+  the model is loaded (an agent run is typically 30–90 seconds; the eval suite ~2 minutes). The
+  very first call after a Codespace starts can take up to 2 minutes while the model loads —
+  the setup scripts pre-load it and keep it in memory. For instant responses use Groq (above).
+- **Agent ends with "Gave up: reached max steps"**: the model kept calling tools instead of
+  answering. Every observation now carries a finish reminder (`observation_message` in
+  `agents/llm.py`); if you still see this on the local model, re-run once or switch to Groq.
 - **`address already in use` / stuck server**: `pkill ollama` then `bash scripts/startOllama.sh`
 - **Model not found**: `ollama pull llama3.2:3b`
+- **`ollama: command not found`** after setup: the Ollama installer needs `zstd`, which
+  `scripts/startup_ollama.sh` now installs first. Re-run `bash scripts/startup_ollama.sh`.
+- **Groq `429` / rate-limit errors**: the free tier has a small per-minute output-token
+  budget; the agents cap output and retry with backoff, so a run may pause for a bit.
+  Running several agents back-to-back (Labs 7 and 10) is where you'll notice it.
+- **`No module named 'mcp.server.fastmcp'`**: the labs target MCP Python SDK **2.x**
+  (`MCPServer`); `requirements.txt` pins `mcp>=2,<3`. Reinstall with
+  `pip install -r requirements.txt`.
 - **`ModuleNotFoundError`**: make sure the virtual environment is active — `source py_env/bin/activate`
   from the repo root, or open a new terminal.
 

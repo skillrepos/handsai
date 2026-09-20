@@ -3,8 +3,9 @@
 openai>=1.30.0
 
 # --- Model Context Protocol ---
-# Official MCP Python SDK: FastMCP server + stdio client
-mcp>=1.2.0
+# Official MCP Python SDK 2.x: MCPServer + stdio client
+# (2.0 renamed FastMCP -> MCPServer and snake_cased result fields; labs target 2.x)
+mcp>=2.0,<3
 
 # --- Testing ---
 # Used by the sample app's test suite and the Lab 8 evaluation harness

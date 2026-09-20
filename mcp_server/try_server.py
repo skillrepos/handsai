@@ -14,8 +14,8 @@ import json
 import os
 import sys
 
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from mcp import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -35,7 +35,7 @@ async def main(server_script):
             for tool in tools.tools:
                 print(f"* {tool.name}")
                 print(f"  description: {(tool.description or '').strip().splitlines()[0]}")
-                print(f"  input schema: {json.dumps(tool.inputSchema)}")
+                print(f"  input schema: {json.dumps(tool.input_schema)}")
                 print()
 
             first = tools.tools[0]
@@ -46,7 +46,8 @@ async def main(server_script):
                 result = await session.call_tool(first.name, {})
             for item in result.content:
                 if item.type == "text":
-                    print(item.text)
+                    compact = json.dumps(json.loads(item.text))  # one line, so it fits on screen
+                    print(compact[:300] + (" ..." if len(compact) > 300 else ""))
 
 
 if __name__ == "__main__":

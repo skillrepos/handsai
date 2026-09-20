@@ -12,7 +12,7 @@ import json
 import os
 import subprocess
 
-from llm import chat, extract_json, which_backend
+from llm import chat, extract_json, observation_message, which_backend
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MAX_OUTPUT = 3000  # characters of command output we let into the context
@@ -134,7 +134,7 @@ def run_agent(task, max_steps=8):
         print(f"--- step {step}: {tool_name}({json.dumps(args)})")
         print(f"    observation: {observation[:200]}")
         messages.append({"role": "assistant", "content": json.dumps(action)})
-        messages.append({"role": "user", "content": f"Observation:\n{observation}"})
+        messages.append({"role": "user", "content": observation_message(observation, max_steps - step)})
     print("\n=== Gave up: reached max steps without a final answer ===")
     return None
 

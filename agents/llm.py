@@ -3,7 +3,15 @@
 Every agent in this workshop talks to a model through the single chat()
 function below. By default it uses the local Ollama server (llama3.2:3b).
 If the environment variable GROQ_API_KEY is set, it uses Groq's
-OpenAI-compatible API with a larger model instead. Both options are free.
+OpenAI-compatible API with a larger hosted model instead. Both are free.
+
+Groq notes (free tier, verified 09/2026):
+  - Default model is qwen/qwen3.8-27b: it follows the labs' "reply with a
+    JSON action" convention reliably. (openai/gpt-oss-* models insist on
+    native function calling and reject prompt-style JSON actions.)
+  - qwen3.8 is a "thinking" model whose reasoning tokens count against the
+    free tier's small output-tokens-per-minute limit, so chat() turns
+    thinking off and caps max_tokens. Agent replies are short JSON anyway.
 """
 
 import json
@@ -12,22 +20,8 @@ import re
 
 from openai import OpenAI
 
-
-def get_client_and_model():
-    """Return an OpenAI-compatible client plus the model name to use."""
-    if os.environ.get("GROQ_API_KEY"):
-        client = OpenAI(
-            base_url="https://api.groq.com/openai/v1",
-            api_key=os.environ["GROQ_API_KEY"],
-        )
-        model = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b")
-    else:
-        client = OpenAI(
-            base_url="http://localhost:11434/v1",
-            api_key="ollama",  # required by the client but unused by Ollama
-        )
-        model = os.environ.get("OLLAMA_MODEL", "llama3.2:3b")
-    return client, model
+GROQ_DEFAULT_MODEL = "qwen/qwen3.8-27b"
+OLLAMA_DEFAULT_MODEL = "llama3.2:3b"
 
 
 def which_backend():
@@ -35,15 +29,57 @@ def which_backend():
     return "groq" if os.environ.get("GROQ_API_KEY") else "ollama"
 
 
+def get_client_and_model():
+    """Return an OpenAI-compatible client plus the model name to use."""
+    if which_backend() == "groq":
+        client = OpenAI(
+            base_url="https://api.groq.com/openai/v1",
+            api_key=os.environ["GROQ_API_KEY"],
+            max_retries=5,  # free-tier rate limits: back off and retry
+        )
+        model = os.environ.get("GROQ_MODEL", GROQ_DEFAULT_MODEL)
+    else:
+        client = OpenAI(
+            base_url="http://localhost:11434/v1",
+            api_key="ollama",  # required by the client but unused by Ollama
+        )
+        model = os.environ.get("OLLAMA_MODEL", OLLAMA_DEFAULT_MODEL)
+    return client, model
+
+
 def chat(messages, temperature=0.0):
     """Send a list of chat messages to the model and return its reply text."""
     client, model = get_client_and_model()
-    response = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        temperature=temperature,
-    )
+    kwargs = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": 600,  # agent replies are short JSON; keeps within rate limits
+    }
+    if which_backend() == "groq":
+        kwargs["reasoning_effort"] = "none"  # no hidden thinking tokens
+    response = client.chat.completions.create(**kwargs)
     return response.choices[0].message.content
+
+
+def observation_message(observation, steps_left):
+    """Wrap a tool observation in the message the model sees next.
+
+    Small models tend to keep calling tools after they already have the
+    answer, so every observation ends with a reminder of how to finish —
+    and the last one insists on it.
+    """
+    if steps_left <= 1:
+        return (
+            f"Observation:\n{observation}\n\n"
+            "You have no tool calls left. Reply with ONLY "
+            '{"final": "<your answer, based on the observations so far>"}.'
+        )
+    return (
+        f"Observation:\n{observation}\n\n"
+        'If you can answer the task now, reply with ONLY {"final": "<answer>"}. '
+        "Otherwise call one more tool."
+    )
 
 
 def extract_json(text):

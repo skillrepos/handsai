@@ -12,12 +12,12 @@
       },
       {
         "anchor": "reply = chat(messages)",
-        "endAnchor": "messages.append({\"role\": \"user\", \"content\": f\"Observation:\\n{observation}\"})",
+        "endAnchor": "messages.append({\"role\": \"user\", \"content\": observation_message(observation, max_steps - step)})",
         "title": "The reason/act/observe loop",
         "note": [
           "**The heart of every agent: ask the model, parse its action, run the tool, feed back the result.**",
           "- Unparseable replies get a retry request instead of a crash",
-          "- `final` ends the loop; otherwise the observation becomes the next user message"
+          "- `final` ends the loop; otherwise the observation (plus a reminder of how to finish) becomes the next user message"
         ]
       }
     ],
@@ -130,7 +130,7 @@
         "title": "Prompt from discovered tools",
         "note": [
           "**Builds the system prompt from tools the agent DISCOVERED at startup — nothing hardcoded.**",
-          "- Uses each tool's description first line plus its inputSchema JSON",
+          "- Uses each tool's description first line plus its input_schema JSON",
           "- New server tools appear in the prompt automatically on next run"
         ]
       },

@@ -1,7 +1,7 @@
 # Hands of AI
 ## Building AI Agents That Act: Tools via CLIs and MCP
 ## Full-day workshop labs
-## Revision 1.1 - 09/15/26
+## Revision 1.3 - 09/20/26
 
 **Startup: You need a running GitHub Codespace created from this repository (see README.md). Setup installs Python, Ollama, and the llama3.2:3b model automatically (3-5 minutes). Verify with:**
 
@@ -11,6 +11,9 @@ python --version
 ```
 
 **You should see llama3.2:3b in the model list and Python 3.10 or later. If the model is missing: `ollama pull llama3.2:3b`**
+
+![Model and Python verified](./images/hoa-setup-1.png?raw=true "Model and Python verified")
+
 
 **NOTES:**
 - **Run all commands from the repository root unless a step says otherwise.**
@@ -37,7 +40,7 @@ python --version
 
 **Purpose: Build the core of every agent — a loop where the model picks a tool, we execute it, and the result feeds back in. Tools here are plain Python functions.**
 
-1. Open the shared LLM helper all agents use. Note the three functions: `chat` (send messages), `extract_json` (pull a JSON action out of a messy reply), `which_backend` (Ollama or Groq).
+1. Open the shared LLM helper all agents use. Note the four functions: `chat` (send messages), `extract_json` (pull a JSON action out of a messy reply), `observation_message` (wrap a tool result with a reminder of how to finish — small models otherwise keep calling tools after they have the answer), `which_backend` (Ollama or Groq).
 
 ```
 code agents/llm.py
@@ -114,6 +117,8 @@ code agents/cli_agent.py
 ```
 code -d extra/cli_agent_complete.txt agents/cli_agent.py
 ```
+
+![Merging run_command](./images/hoa2-4.png?raw=true "Merging run_command")
 <br><br>
 
 5. Read the merged `run_command` — four jobs every CLI agent needs: capture stdout+stderr+exit code, enforce a timeout, truncate long output (`MAX_OUTPUT`), and format it for the model.
@@ -128,7 +133,7 @@ python agents/cli_agent.py
 ![CLI agent finds the failing test](./images/hoa2-6.png?raw=true "CLI agent finds the failing test")
 <br><br>
 
-7. It should report that `test_total_value` fails. Look at the observations it waded through: exit codes, boilerplate, arbitrary truncation. This works — and it's exactly what we'll design away in Lab 3.
+7. It should name `test_total_value` as the failing test (on the small local model, expect several extra tool calls and a muddled *why*). Look at the observations it waded through: exit codes, boilerplate, arbitrary truncation. It works — barely — and that's exactly what we design away in Lab 3.
 
 <p align="center">
 **[END OF LAB]**
@@ -154,6 +159,8 @@ code cli_tools/repo_tool.py
 ```
 code -d extra/repo_tool_complete.txt cli_tools/repo_tool.py
 ```
+
+![Merging do_search](./images/hoa3-3.png?raw=true "Merging do_search")
 <br><br>
 
 4. Test it by hand — every response is one JSON object with an `ok` field:
@@ -163,7 +170,7 @@ python cli_tools/repo_tool.py tests
 python cli_tools/repo_tool.py log-summary --level ERROR
 ```
 
-![repo_tool structured output](./images/hoa3-4.png?raw=true "repo_tool structured output")
+![repo_tool tests output](./images/hoa3-4.png?raw=true "repo_tool tests output")
 <br><br>
 
 5. Now probe the error behavior, checking the exit code each time:
@@ -174,6 +181,8 @@ echo $?
 python cli_tools/repo_tool.py search
 echo $?
 ```
+
+![Structured error vs usage error](./images/hoa3-5.png?raw=true "Structured error vs usage error")
 <br><br>
 
 6. The first is a *structured* error (exit 1): the operation ran and failed meaningfully, and the message names the valid options. The second is a *usage* error from argparse (exit 2). A program — or an agent — can tell them apart without reading English.
@@ -210,6 +219,8 @@ code agents/structured_agent.py
 ```
 code -d extra/structured_agent_complete.txt agents/structured_agent.py
 ```
+
+![Merging run_tool](./images/hoa4-2.png?raw=true "Merging run_tool")
 <br><br>
 
 3. Run it on the same task the Lab 2 agent handled:
@@ -247,6 +258,8 @@ code mcp_server/repo_mcp.py
 ```
 code -d extra/repo_mcp_complete.txt mcp_server/repo_mcp.py
 ```
+
+![Merging the three MCP tools](./images/hoa5-3.png?raw=true "Merging the three MCP tools")
 <br><br>
 
 4. A stdio MCP server just waits for a client, so we poke it with a tiny test client. Open it — this is the client side of MCP in ~50 lines: launch server, initialize, `list_tools`, `call_tool`.
@@ -265,7 +278,7 @@ python mcp_server/try_server.py
 ![Discovered tools and schemas](./images/hoa5-5.png?raw=true "Discovered tools and schemas")
 <br><br>
 
-6. All four tools appear with auto-generated schemas — find `"required": ["title", "body"]` on `open_ticket`; you never wrote schema code. Lines like `Processing request of type ...` are server stderr logging and are harmless.
+6. All four tools appear with auto-generated schemas — find `"required": ["title", "body"]` on `open_ticket`; you never wrote schema code.
 <br><br>
 
 7. Where did the schema come from? Type hints. The description? Docstrings — which means docstring quality is now prompt engineering.
@@ -291,9 +304,11 @@ code agents/mcp_agent.py
 ```
 code -d extra/mcp_agent_complete.txt agents/mcp_agent.py
 ```
+
+![Merging the discovery prompt](./images/hoa6-2.png?raw=true "Merging the discovery prompt")
 <br><br>
 
-3. Before running, find these in the merged code: (a) the agent never imports the server — it only knows a script path; (b) the prompt is built from `tool.description` and `tool.inputSchema`; (c) failures come back via the protocol's `isError` flag.
+3. Before running, find these in the merged code: (a) the agent never imports the server — it only knows a script path; (b) the prompt is built from `tool.description` and `tool.input_schema`; (c) failures come back via the protocol's `is_error` flag.
 <br><br>
 
 4. Run it:
@@ -339,14 +354,16 @@ python agents/compare_agents.py
 ![Comparison summary table](./images/hoa7-2.png?raw=true "Comparison summary table")
 <br><br>
 
-3. Open the transcripts side by side:
+3. Open both transcripts (they open as two tabs — drag one tab to the right half of the editor to view them side by side):
 
 ```
 code transcripts/cli_transcript.md transcripts/mcp_transcript.md
 ```
+
+![CLI and MCP transcripts side by side](./images/hoa7-3.png?raw=true "CLI and MCP transcripts side by side")
 <br><br>
 
-4. With the transcripts in front of you: Did both agents pick the same tools? Which observation format is easier to skim? How much of the time difference is LLM latency (count the LLM calls)? We'll debrief as a group.
+4. With the transcripts in front of you: Did both agents pick the same tools? Which observation format is easier to skim? How much of the time difference is LLM latency (count the LLM calls)? On Groq's free tier a big wall-time gap is usually rate-limit backoff from the first run, not the surface — a useful reminder that measurements need context. We'll debrief as a group.
 <br><br>
 
 5. Probe error handling on the CLI surface — the same mistake through MCP would be rejected by schema validation *before your code runs*:
@@ -382,6 +399,8 @@ code mcp_server/git_mcp.py
 ```
 code -d extra/git_mcp_complete.txt mcp_server/git_mcp.py
 ```
+
+![Merging file_history](./images/hoa8-3.png?raw=true "Merging file_history")
 <br><br>
 
 4. Point the *unchanged* Lab 6 agent at the new server — it discovers the git tools and gains new abilities with zero code changes:
@@ -389,6 +408,8 @@ code -d extra/git_mcp_complete.txt mcp_server/git_mcp.py
 ```
 python agents/mcp_agent.py --server mcp_server/git_mcp.py "What are the three most recent commits in this repo, and who made them?"
 ```
+
+![Agent discovers and uses the git tools](./images/hoa8-4.png?raw=true "Agent discovers and uses the git tools")
 <br><br>
 
 5. Now try to make it misbehave:
@@ -426,6 +447,8 @@ code guardrails/policy.py
 ```
 code -d extra/safe_agent_complete.txt agents/safe_agent.py
 ```
+
+![Merging the guardrail gate](./images/hoa9-3.png?raw=true "Merging the guardrail gate")
 <br><br>
 
 4. Run it. When it wants to open a ticket, it stops and asks **you** — read the proposal at the `[y/N]` prompt and answer `y`:
@@ -442,6 +465,8 @@ python agents/safe_agent.py
 ```
 cat audit_log.jsonl
 ```
+
+![Audit trail](./images/hoa9-5.png?raw=true "Audit trail")
 <br><br>
 
 6. (Optional, if time permits) Run it again and answer `N` — the agent receives a DENIED observation, survives, and adjusts. Check the log for `rejected_by_human`.
@@ -468,6 +493,8 @@ code eval/scenarios.json
 code eval/run_evals.py
 code -d extra/run_evals_complete.txt eval/run_evals.py
 ```
+
+![Merging the check implementations](./images/hoa10-2.png?raw=true "Merging the check implementations")
 <br><br>
 
 3. Run the suite. Approvals are automatic here (`SAFE_AGENT_AUTO_APPROVE`) so it can run unattended — itself a policy decision, visible in the audit log. On Ollama this is the longest wait of the day; with Groq it's under a minute.

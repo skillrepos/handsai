@@ -12,7 +12,7 @@ will drive tools that live behind CLIs and MCP servers.
 import json
 import os
 
-from llm import chat, extract_json, which_backend
+from llm import chat, extract_json, observation_message, which_backend
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 

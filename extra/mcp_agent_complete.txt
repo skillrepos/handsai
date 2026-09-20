@@ -15,9 +15,9 @@ import json
 import os
 import sys
 
-from llm import chat, extract_json, which_backend
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from llm import chat, extract_json, observation_message, which_backend
+from mcp import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_SERVER = "mcp_server/repo_mcp.py"
@@ -34,7 +34,7 @@ def build_system_prompt(tools):
         description = (tool.description or "").strip().splitlines()
         first_line = description[0] if description else "(no description)"
         lines.append(f"- {tool.name}: {first_line}")
-        lines.append(f"  input schema: {json.dumps(tool.inputSchema)}")
+        lines.append(f"  input schema: {json.dumps(tool.input_schema)}")
     lines += [
         "",
         "To use a tool, reply with ONLY a JSON object like:",
@@ -55,7 +55,7 @@ async def call_mcp_tool(session, tool_name, args):
         return f"ERROR: tool call failed: {e}"
     parts = [item.text for item in result.content if item.type == "text"]
     observation = "\n".join(parts) if parts else "(no text content returned)"
-    if result.isError:
+    if result.is_error:
         observation = f"TOOL ERROR:\n{observation}"
     return observation
 
@@ -96,9 +96,9 @@ async def run_agent(task, server_script=DEFAULT_SERVER, max_steps=8):
                 else:
                     observation = await call_mcp_tool(session, tool_name, args)
                 print(f"--- step {step}: {tool_name}({json.dumps(args)})")
-                print(f"    observation: {observation[:200]}")
+                print(f"    observation: {' '.join(observation.split())[:200]}")
                 messages.append({"role": "assistant", "content": json.dumps(action)})
-                messages.append({"role": "user", "content": f"Observation:\n{observation}"})
+                messages.append({"role": "user", "content": observation_message(observation, max_steps - step)})
             print("\n=== Gave up: reached max steps without a final answer ===")
             return None
 

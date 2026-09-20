@@ -15,9 +15,9 @@ import json
 import os
 import sys
 
-from llm import chat, extract_json, which_backend
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
+from llm import chat, extract_json, observation_message, which_backend
+from mcp import ClientSession
+from mcp.client.stdio import StdioServerParameters, stdio_client
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_SERVER = "mcp_server/repo_mcp.py"
@@ -35,7 +35,7 @@ async def call_mcp_tool(session, tool_name, args):
     """Execute one tool call through the MCP session and return observation text."""
     # TODO: Lab 6 merge step — call the tool through the MCP session, join
     # the text content parts into an observation string, and flag errors
-    # using the result's isError field.
+    # using the result's is_error field.
     raise NotImplementedError("merge in the completed code (see labs.md)")
 
 
@@ -75,9 +75,9 @@ async def run_agent(task, server_script=DEFAULT_SERVER, max_steps=8):
                 else:
                     observation = await call_mcp_tool(session, tool_name, args)
                 print(f"--- step {step}: {tool_name}({json.dumps(args)})")
-                print(f"    observation: {observation[:200]}")
+                print(f"    observation: {' '.join(observation.split())[:200]}")
                 messages.append({"role": "assistant", "content": json.dumps(action)})
-                messages.append({"role": "user", "content": f"Observation:\n{observation}"})
+                messages.append({"role": "user", "content": observation_message(observation, max_steps - step)})
             print("\n=== Gave up: reached max steps without a final answer ===")
             return None
 
