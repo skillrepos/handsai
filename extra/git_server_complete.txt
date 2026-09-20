@@ -1,0 +1,58 @@
+"""
+Lab 6 - Wrapping a CLI Behind MCP
+An MCP server whose tools shell out to git -- the wrap pattern:
+keep the battle-tested CLI, add a typed, governed protocol surface.
+Note: this file is incomplete -- you'll merge in the working code
+during the lab.
+"""
+import json
+import subprocess
+
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("git-wrapped")
+
+# Only these git subcommands may ever run -- the wrap boundary is
+# where policy lives.
+ALLOWED_SUBCOMMANDS = {"status", "log", "diff", "branch", "show"}
+
+
+# ---------------------------------------------------------------
+# run_git - validate against the allowlist FIRST, run git with a
+# fixed argument list (no shell string to inject into), and return
+# errors as data so the model can read them and adjust.
+# ---------------------------------------------------------------
+def run_git(subcommand: str, args: list[str]) -> str:
+    if subcommand not in ALLOWED_SUBCOMMANDS:
+        return json.dumps({
+            "error": f"subcommand '{subcommand}' is not allowed",
+            "allowed": sorted(ALLOWED_SUBCOMMANDS),
+        })
+    try:
+        proc = subprocess.run(
+            ["git", subcommand, *args],
+            capture_output=True, text=True, timeout=10,
+        )
+    except subprocess.TimeoutExpired:
+        return json.dumps({"error": "git command timed out"})
+    if proc.returncode != 0:
+        return json.dumps({"error": proc.stderr.strip()[:500]})
+    return json.dumps({"output": proc.stdout[:2000]})
+
+
+@mcp.tool()
+def git_command(subcommand: str, args: list[str] = []) -> str:
+    """Run a read-only git subcommand (status, log, diff, branch, show)
+    with optional arguments and get structured output back."""
+    return run_git(subcommand, args)
+
+
+@mcp.tool()
+def diff_summary() -> str:
+    """Summarize how many files changed and how many lines were
+    added/removed in the working tree."""
+    return run_git("diff", ["--shortstat"])
+
+
+if __name__ == "__main__":
+    mcp.run()

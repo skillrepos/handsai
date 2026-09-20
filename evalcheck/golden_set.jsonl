@@ -1,0 +1,8 @@
+{"task": "How many Python files are in this repository?", "expected_tool": "count_files"}
+{"task": "Show me the last 4 commits.", "expected_tool": "git_log"}
+{"task": "Are there any uncommitted changes right now?", "expected_tool": "git_status"}
+{"task": "Count the markdown files in the repo.", "expected_tool": "count_files"}
+{"task": "Who wrote the most recent commit?", "expected_tool": "git_log"}
+{"task": "Is the working tree clean?", "expected_tool": "git_status"}
+{"task": "How many shell scripts (*.sh) does this project have?", "expected_tool": "count_files"}
+{"task": "List recent commit messages.", "expected_tool": "git_log"}

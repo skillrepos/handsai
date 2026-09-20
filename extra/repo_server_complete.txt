@@ -1,0 +1,68 @@
+"""
+Lab 4 - Your First MCP Server
+The same kind of capabilities as before, but exposed through the
+Model Context Protocol: discoverable, schema-described, and usable
+by ANY MCP client -- not just our Python agent.
+Note: this file is incomplete -- you'll merge in the working code
+during the lab.
+"""
+import json
+import subprocess
+from pathlib import Path
+
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("repo-tools")
+
+
+@mcp.tool()
+def file_info(path: str) -> str:
+    """Get the size in bytes and line count of a text file in the repo."""
+    p = Path(path)
+    if not p.is_file():
+        return json.dumps({"error": f"{path} is not a file"})
+    text = p.read_text(errors="replace")
+    return json.dumps({
+        "path": path,
+        "bytes": p.stat().st_size,
+        "lines": text.count("\n") + 1,
+    })
+
+
+# ---------------------------------------------------------------
+# word_count - the docstring and type hints BECOME the schema the
+# client sees. FastMCP generates it; you just write the function.
+# ---------------------------------------------------------------
+@mcp.tool()
+def word_count(path: str) -> str:
+    """Count the words in a text file in the repository."""
+    p = Path(path)
+    if not p.is_file():
+        return json.dumps({"error": f"{path} is not a file"})
+    return json.dumps({"path": path, "words": len(p.read_text(errors="replace").split())})
+
+
+# ---------------------------------------------------------------
+# recent_commits - same subprocess pattern as Lab 3, now behind
+# a protocol boundary any MCP client can discover and call.
+# ---------------------------------------------------------------
+@mcp.tool()
+def recent_commits(count: int = 5) -> str:
+    """Get the most recent git commits with hash, author, and subject."""
+    proc = subprocess.run(
+        ["git", "log", f"-{int(count)}", "--pretty=format:%h|%an|%s"],
+        capture_output=True, text=True, timeout=10,
+    )
+    if proc.returncode != 0:
+        return json.dumps({"error": proc.stderr.strip()})
+    commits = []
+    for line in proc.stdout.splitlines():
+        h, author, subject = line.split("|", 2)
+        commits.append({"hash": h, "author": author, "subject": subject})
+    return json.dumps({"commits": commits})
+
+
+if __name__ == "__main__":
+    # stdio transport: the client starts this process and speaks
+    # MCP with it over stdin/stdout.
+    mcp.run()

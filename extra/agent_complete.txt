@@ -1,0 +1,118 @@
+"""
+Lab 1 - Your First Agent Loop
+A minimal agent: the model reasons over a task, picks a tool,
+we execute it, and the model incorporates the result.
+Note: this file is incomplete -- you'll merge in the working code
+during the lab.
+"""
+import json
+import ollama
+
+MODEL = "llama3.2:3b"
+
+
+# ---------------------------------------------------------------
+# The "hands": plain Python functions the agent can call
+# ---------------------------------------------------------------
+def calculator(expression: str) -> str:
+    """Evaluate a basic math expression like '23 * 7 + 2'."""
+    allowed = set("0123456789+-*/(). ")
+    if not set(expression) <= allowed:
+        return json.dumps({"error": "expression contains unsupported characters"})
+    try:
+        return json.dumps({"result": eval(expression)})
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+def read_file_head(path: str, lines: int = 5) -> str:
+    """Return the first N lines of a text file."""
+    try:
+        with open(path) as f:
+            head = [next(f).rstrip() for _ in range(lines)]
+        return json.dumps({"path": path, "lines": head})
+    except StopIteration:
+        return json.dumps({"path": path, "lines": "file has fewer lines"})
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+
+FUNCTIONS = {"calculator": calculator, "read_file_head": read_file_head}
+
+
+# ---------------------------------------------------------------
+# TOOLS - the schemas that tell the model what hands it has:
+# name, description, and typed parameters. The model never sees
+# your Python code, only these descriptions.
+# ---------------------------------------------------------------
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "calculator",
+            "description": "Evaluate a basic arithmetic expression.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "expression": {
+                        "type": "string",
+                        "description": "Math expression, e.g. '23 * 7 + 2'",
+                    }
+                },
+                "required": ["expression"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "read_file_head",
+            "description": "Read the first few lines of a text file.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "path": {"type": "string", "description": "Path to the file"},
+                    "lines": {"type": "integer", "description": "How many lines (default 5)"},
+                },
+                "required": ["path"],
+            },
+        },
+    },
+]
+
+
+def run_agent(task: str) -> None:
+    messages = [
+        {"role": "system",
+         "content": "You are a helpful assistant. Use the provided tools "
+                    "when they can answer the question. Answer concisely."},
+        {"role": "user", "content": task},
+    ]
+
+    # The agent loop: think -> act -> observe -> repeat
+    for _ in range(5):  # safety cap on iterations
+        response = ollama.chat(model=MODEL, messages=messages, tools=TOOLS)
+        msg = response["message"]
+        messages.append(msg)
+
+        if not msg.get("tool_calls"):
+            print(f"ANSWER: {msg['content']}")
+            return
+
+        for call in msg["tool_calls"]:
+            name = call["function"]["name"]
+            args = call["function"]["arguments"]
+            print(f"  -> model chose tool: {name}({args})")
+            fn = FUNCTIONS.get(name)
+            result = fn(**args) if fn else json.dumps({"error": f"unknown tool {name}"})
+            print(f"  <- tool returned: {result}")
+            messages.append({"role": "tool", "content": result})
+
+    print("Stopped: too many tool iterations.")
+
+
+if __name__ == "__main__":
+    import sys
+    task = " ".join(sys.argv[1:]) or "What is 23 * 7 + 2?"
+    print(f"TASK: {task}\n")
+    run_agent(task)

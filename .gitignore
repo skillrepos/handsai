@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.pyc
+py_env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Lab artifacts students generate
+guardrails/audit_log.jsonl
+capstone/repo_health.md
+oops.txt
+
+# ---------------------------------------------------------------------------
+# TechUpSkills course-repo conventions
+# Slide decks, QA/report docs, and scratch dirs are not student-facing artifacts
+# and stay out of the course repo.
+# ---------------------------------------------------------------------------
+
+# PowerPoint decks (large binaries, distributed separately)
+*.pptx
+*.pptm
+*.potx
+*.ppt
+slides/
+
+# QA / test-report markdown, any case (qa-report.md, LAB-QA.md, anticipated-qa.md)
+*[qQ][aA]*.md
+
+# Internal reports and notes (ALL-CAPS .md) are not student-facing.
+# Implemented as an allow-list, NOT as [A-Z]*.md: course repos often live on
+# case-insensitive filesystems (macOS / OneDrive => core.ignorecase=true), where
+# a character-class glob also matches labs.md. Allow-list instead.
+*.md
+!README.md
+!README-Codespace.md
+!LICENSE.md
+!labs.md
+!.github/copilot-instructions.md
+!extra/demo/demo_readme.md
+
+# Scratch / staging subdirectories
+_*/

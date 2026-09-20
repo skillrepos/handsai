@@ -1,0 +1,11 @@
+# --- LLM access (local model via Ollama) ---
+ollama>=0.4.0
+
+# --- Model Context Protocol SDK (server + client, FastMCP included) ---
+mcp[cli]>=1.9.0
+
+# --- Validation for tool parameters (guardrails labs) ---
+pydantic>=2.7
+
+# --- Console formatting for agent output ---
+rich>=13.7

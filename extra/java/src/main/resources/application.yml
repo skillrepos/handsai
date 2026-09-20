@@ -1,0 +1,15 @@
+spring:
+  ai:
+    mcp:
+      server:
+        name: git-wrapped
+        version: 1.0.0
+        # stdio for a local client that spawns this process (today's labs),
+        # streamable-http for the shared/production surface.
+        transport: streamable-http
+        path: /mcp
+
+# stdio transport note: when running over stdio, turn the banner and console
+# logging off so nothing but protocol traffic reaches stdout.
+#   spring.main.banner-mode: off
+#   logging.pattern.console:

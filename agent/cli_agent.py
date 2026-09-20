@@ -1,0 +1,77 @@
+"""
+Lab 2 - CLI as Hands
+Give the agent one very powerful tool: a shell.
+Note: this file is incomplete -- you'll merge in the working code
+during the lab.
+"""
+import json
+import subprocess
+import ollama
+
+MODEL = "llama3.2:3b"
+
+
+# ---------------------------------------------------------------
+# TODO (merge): run_command - execute a shell command and return
+# stdout, stderr, and the exit code as structured JSON.
+# ---------------------------------------------------------------
+def run_command(command: str) -> str:
+    raise NotImplementedError("Merge in run_command from extra/cli_agent_complete.txt")
+
+
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "run_command",
+            "description": "Run a shell command in the repository directory "
+                           "and return its output. Use standard Linux tools "
+                           "like ls, wc, grep, find, git, cat.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "command": {
+                        "type": "string",
+                        "description": "The exact shell command to run",
+                    }
+                },
+                "required": ["command"],
+            },
+        },
+    }
+]
+
+
+def run_agent(task: str) -> None:
+    messages = [
+        {"role": "system",
+         "content": "You are a command-line assistant working in a git "
+                    "repository. Use the run_command tool to answer "
+                    "questions about the repo. Answer concisely."},
+        {"role": "user", "content": task},
+    ]
+
+    for _ in range(6):
+        response = ollama.chat(model=MODEL, messages=messages, tools=TOOLS)
+        msg = response["message"]
+        messages.append(msg)
+
+        if not msg.get("tool_calls"):
+            print(f"ANSWER: {msg['content']}")
+            return
+
+        for call in msg["tool_calls"]:
+            args = call["function"]["arguments"]
+            print(f"  -> running: {args.get('command')}")
+            result = run_command(**args)
+            print(f"  <- {result[:200]}")
+            messages.append({"role": "tool", "content": result})
+
+    print("Stopped: too many tool iterations.")
+
+
+if __name__ == "__main__":
+    import sys
+    task = " ".join(sys.argv[1:]) or "How many Python files are in this repository?"
+    print(f"TASK: {task}\n")
+    run_agent(task)

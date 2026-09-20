@@ -1,0 +1,60 @@
+"""
+Lab 8 - Trust but Verify: Evaluating Tool Choice
+A tiny eval harness: for each golden task, does the model pick the
+tool we expect? Run it after every tool or description change.
+Note: this file is incomplete -- you'll merge in the working code
+during the lab.
+"""
+import json
+import sys
+from pathlib import Path
+
+import ollama
+
+sys.path.insert(0, "agent")
+from git_tools import TOOLS  # noqa: E402  (the Lab 3 tool schemas)
+
+MODEL = "llama3.2:3b"
+GOLDEN = Path("evalcheck/golden_set.jsonl")
+
+
+def first_tool_choice(task: str) -> str | None:
+    """Ask the model once and return the name of the first tool it picks."""
+    response = ollama.chat(
+        model=MODEL,
+        messages=[
+            {"role": "system",
+             "content": "You answer questions about this git repository "
+                        "using the provided tools."},
+            {"role": "user", "content": task},
+        ],
+        tools=TOOLS,
+    )
+    calls = response["message"].get("tool_calls") or []
+    return calls[0]["function"]["name"] if calls else None
+
+
+# ---------------------------------------------------------------
+# main - load the golden set, score each case, print a summary.
+# The eval is deliberately narrow: it tests TOOL CHOICE, the thing
+# a tool description change is most likely to break.
+# ---------------------------------------------------------------
+def main() -> None:
+    cases = [json.loads(line) for line in GOLDEN.read_text().splitlines() if line.strip()]
+    passed = 0
+    print(f"Running {len(cases)} golden cases against {MODEL}...\n")
+    for case in cases:
+        choice = first_tool_choice(case["task"])
+        ok = choice == case["expected_tool"]
+        passed += ok
+        status = "PASS" if ok else "FAIL"
+        print(f"  [{status}] {case['task']}")
+        print(f"         expected={case['expected_tool']}  got={choice}")
+    print(f"\nSCORE: {passed}/{len(cases)}")
+    if passed < len(cases):
+        print("Tip: failures usually mean a tool description is ambiguous. "
+              "Edit the description and re-run.")
+
+
+if __name__ == "__main__":
+    main()
