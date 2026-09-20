@@ -1,7 +1,7 @@
 # Hands of AI
 ## Building AI Agents That Act: Tools via CLIs and MCP
 ## Full-day workshop labs
-## Revision 1.4 - 09/20/26
+## Revision 1.5 - 09/20/26
 
 **Startup: You need a running GitHub Codespace created from this repository (see README.md). Setup installs Python, Ollama, and the llama3.2:3b model automatically (3-5 minutes). Verify with:**
 
@@ -19,6 +19,22 @@ python --version
 - **Run all commands from the repository root unless a step says otherwise.**
 - **Local model calls take 5-10 seconds each, so an agent run is typically 30-90 seconds — be patient. For ~1-second responses, set up a free Groq API key (README.md Setup steps 4-5): `source scripts/setup-key.sh`. Every lab uses it automatically; `source scripts/setup-key.sh --remove` switches back.**
 - **The scenario all day: you're building an on-call engineer's assistant. A small inventory service in `sample_app/` has a failing nightly report. Your agent will gain the tools to investigate it — and by the end, guardrails so you can trust it to act.**
+</br></br>
+
+**Assembling Code**
+
+> To learn about the code without getting stuck in syntax and typing, we use a "diff and merge" approach to construct complete code.
+>
+> This involves a side-by-side view with the code to be merged in on the left and an incomplete starter set of code on the right.
+>
+> Most code to be merged will also have informational comments available describing what the code does. You get to these by hovering over the code or content to be merged when you see the yellow comment icon in the left gutter. See figure below for an example.
+>
+> When ALL merges are done, you can save your changes and close the view by clicking on the `X` in the tab at the top of the diff.
+>
+> Two more kinds of highlights help you read code outside the diff view. When you open a starter file on its own, the spots where merged code will land are highlighted in **yellow** (they disappear once you've merged). And in files a lab opens just to *read*, the parts the step calls out are highlighted in **blue** — hover any highlight for the explanation.
+> <br><br>
+![merge info](./images/merge-info3.png?raw=true "merge info")
+
 </br></br>
 
 ## Lab agenda (10 labs, ~10-12 minutes each)
@@ -40,14 +56,14 @@ python --version
 
 **Purpose: Build the core of every agent — a loop where the model picks a tool, we execute it, and the result feeds back in. Tools here are plain Python functions.**
 
-1. Open the shared LLM helper all agents use. Note the four functions: `chat` (send messages), `extract_json` (pull a JSON action out of a messy reply), `observation_message` (wrap a tool result with a reminder of how to finish — small models otherwise keep calling tools after they have the answer), `which_backend` (Ollama or Groq).
+1. Open the shared LLM helper all agents use — each one is highlighted in blue; hover for what it does. Note the four functions: `chat` (send messages), `extract_json` (pull a JSON action out of a messy reply), `observation_message` (wrap a tool result with a reminder of how to finish — small models otherwise keep calling tools after they have the answer), `which_backend` (Ollama or Groq).
 
 ```
 code agents/llm.py
 ```
 <br><br>
 
-2. Open the Lab 1 skeleton. It has three tools (`calculator`, `read_file`, `list_files`), a `TOOLS` registry describing them, and two TODOs. It won't run yet — we merge in the working code next.
+2. Open the Lab 1 skeleton. It has three tools (`calculator`, `read_file`, `list_files`), a `TOOLS` registry describing them (blue highlight), and two TODOs (yellow highlights — where the merge will land). It won't run yet — we merge in the working code next.
 
 ```
 code agents/simple_agent.py
@@ -121,7 +137,7 @@ code -d extra/cli_agent_complete.txt agents/cli_agent.py
 ![Merging run_command](./images/hoa2-4.png?raw=true "Merging run_command")
 <br><br>
 
-5. Read the merged `run_command` — four jobs every CLI agent needs: capture stdout+stderr+exit code, enforce a timeout, truncate long output (`MAX_OUTPUT`), and format it for the model.
+5. Read the merged `run_command` — the four jobs are now highlighted in blue: capture stdout+stderr+exit code, enforce a timeout, truncate long output (`MAX_OUTPUT`), and format it for the model.
 <br><br>
 
 6. Run the agent:
@@ -144,7 +160,7 @@ python agents/cli_agent.py
 
 **Purpose: Build a CLI made *for* an agent: JSON output, bounded results, meaningful errors, honest exit codes. No LLM in this lab — good tools are testable by hand.**
 
-1. Open the skeleton. The module docstring is the design checklist. `do_tests` is complete as a worked example; `do_search`, `do_log_summary`, and `do_ticket` are TODOs.
+1. Open the skeleton. The module docstring is the design checklist and `do_tests` is complete as a worked example — both highlighted in blue; `do_search`, `do_log_summary`, and `do_ticket` are TODOs.
 
 ```
 code cli_tools/repo_tool.py
@@ -243,7 +259,7 @@ python agents/structured_agent.py
 
 **Purpose: Expose the same four capabilities through the Model Context Protocol — typed schemas and descriptions generated from your code, discoverable by any MCP client. No LLM in this lab.**
 
-1. Open the server skeleton. It imports the Lab 3 logic unchanged — only the *surface* changes. `search_code` is already exposed as a worked example.
+1. Open the server skeleton. It imports the Lab 3 logic unchanged — only the *surface* changes. `search_code` is already exposed as a worked example (blue highlight).
 
 ```
 code mcp_server/repo_mcp.py
@@ -262,7 +278,7 @@ code -d extra/repo_mcp_complete.txt mcp_server/repo_mcp.py
 ![Merging the three MCP tools](./images/hoa5-3.png?raw=true "Merging the three MCP tools")
 <br><br>
 
-4. A stdio MCP server just waits for a client, so we poke it with a tiny test client. Open it — this is the client side of MCP in ~50 lines: launch server, initialize, `list_tools`, `call_tool`.
+4. A stdio MCP server just waits for a client, so we poke it with a tiny test client. Open it — this is the client side of MCP in ~50 lines: launch server, initialize, `list_tools`, `call_tool` (each step highlighted in blue).
 
 ```
 code mcp_server/try_server.py
@@ -308,7 +324,7 @@ code -d extra/mcp_agent_complete.txt agents/mcp_agent.py
 ![Merging the discovery prompt](./images/hoa6-2.png?raw=true "Merging the discovery prompt")
 <br><br>
 
-3. Before running, find these in the merged code: (a) the agent never imports the server — it only knows a script path; (b) the prompt is built from `tool.description` and `tool.input_schema`; (c) failures come back via the protocol's `is_error` flag.
+3. Before running, find these in the merged code (highlighted in blue): (a) the agent never imports the server — it only knows a script path; (b) the prompt is built from `tool.description` and `tool.input_schema`; (c) failures come back via the protocol's `is_error` flag.
 <br><br>
 
 4. Run it:
@@ -338,7 +354,7 @@ python agents/mcp_agent.py "Check the log for errors, run the tests, search the 
 
 **Purpose: Run the same task through the Lab 4 agent (CLI tools) and the Lab 6 agent (MCP tools), then compare the evidence.**
 
-1. Open the comparison harness — provided complete, no merge. It runs both agents on one task and saves both transcripts under `transcripts/`.
+1. Open the comparison harness — provided complete, no merge; the three things it does are highlighted in blue. It runs both agents on one task and saves both transcripts under `transcripts/`.
 
 ```
 code agents/compare_agents.py
@@ -384,7 +400,7 @@ python cli_tools/repo_tool.py log-summary --level DEBUG
 
 **Purpose: Wrap a battle-tested CLI in an MCP server: intent-sized tools plus a guarded escape hatch. The wrapper adds the safety git alone doesn't have.**
 
-1. Open the skeleton. Provided: `_git` (the one place that shells out — timeout, error capture, truncation) and `recent_commits` (a worked example that turns `git log` into structured commits). TODOs: `file_history` and `git_readonly`.
+1. Open the skeleton. Provided, in blue: the allowlist, `_git` (the one place that shells out — timeout, error capture, truncation) and `recent_commits` (a worked example that turns `git log` into structured commits). TODOs: `file_history` and `git_readonly`.
 
 ```
 code mcp_server/git_mcp.py
@@ -432,7 +448,7 @@ python agents/mcp_agent.py --server mcp_server/git_mcp.py "Use the git_readonly 
 
 **Purpose: Wrap every tool call in a policy layer — allowlist, schema validation, human approval for side effects, and an audit log. All of it outside the model.**
 
-1. Open the policy — provided complete, deliberately boring code. Find the four control points: `ALLOWED_TOOLS`, `APPROVAL_REQUIRED`, `validate_call`, `audit`.
+1. Open the policy — provided complete, deliberately boring code. The four control points are highlighted in blue: `ALLOWED_TOOLS`, `APPROVAL_REQUIRED`, `validate_call`, `audit`.
 
 ```
 code guardrails/policy.py
@@ -480,7 +496,7 @@ cat audit_log.jsonl
 
 **Purpose: Measure the agent instead of trusting a demo: scenarios with deterministic checks, run like tests. Strongly recommended with Groq — this is three full agent runs.**
 
-1. Open the scenarios — each is a task plus fact-based checks (answer mentions the bug, a ticket exists, step budget respected). No LLM judges.
+1. Open the scenarios — hover the blue highlights: each is a task plus fact-based checks (answer mentions the bug, a ticket exists, step budget respected). No LLM judges.
 
 ```
 code eval/scenarios.json

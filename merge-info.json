@@ -186,5 +186,543 @@
         ]
       }
     ]
+  },
+  "skeletons": {
+    "agents/simple_agent.py": [
+      {
+        "anchor": "# TODO: Lab 1 merge step — build the system prompt that tells the model",
+        "done": "lines = [",
+        "title": "System prompt from tool registry",
+        "note": [
+          "**Builds the text that teaches the model what tools exist and how to call one.**",
+          "- Each TOOLS entry becomes one description line — the model knows only what's written here",
+          "- Ends with the JSON action format: `{\"tool\":...}` or `{\"final\":...}`"
+        ],
+        "lines": 3
+      },
+      {
+        "anchor": "# TODO: Lab 1 merge step — the reason/act/observe loop goes here:",
+        "done": "reply = chat(messages)",
+        "title": "The reason/act/observe loop",
+        "note": [
+          "**The heart of every agent: ask the model, parse its action, run the tool, feed back the result.**",
+          "- Unparseable replies get a retry request instead of a crash",
+          "- `final` ends the loop; otherwise the observation (plus a reminder of how to finish) becomes the next user message"
+        ],
+        "lines": 6
+      }
+    ],
+    "agents/cli_agent.py": [
+      {
+        "anchor": "# TODO: Lab 2 merge step — run the command with subprocess, capture",
+        "done": "result = subprocess.run(",
+        "title": "Safe subprocess runner",
+        "note": [
+          "**Runs any CLI command and packages stdout, stderr, and exit code for the model.**",
+          "- 120s timeout stops hung commands from freezing the agent",
+          "- Output truncated at MAX_OUTPUT chars so it can't flood the context"
+        ],
+        "lines": 3
+      },
+      {
+        "anchor": "# TODO: Lab 2 merge step — call run_command with the right grep invocation.",
+        "done": "return run_command([\"grep\", \"-rn\", pattern, \"sample_app\", \"--include=*.py\"])",
+        "title": "grep as an agent tool",
+        "note": "**Recursive grep over the sample app — the model gets raw match lines with file:line prefixes.**",
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: Lab 2 merge step — call run_command with the right pytest invocation.",
+        "done": "return run_command([\"python\", \"-m\", \"pytest\", \"sample_app\", \"--tb=short\", \"-q\"])",
+        "title": "pytest as an agent tool",
+        "note": "**Runs the test suite — the model must parse pytest's human-oriented output itself.**",
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: Lab 2 merge step — call run_command with the right git invocation.",
+        "done": "return run_command([\"git\", \"log\", \"--oneline\", \"-5\"])",
+        "title": "git log as an agent tool",
+        "note": "**Last five commits, one per line — simple, but format is git's choice, not ours.**",
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: Lab 2 merge step — call run_command with the right tail invocation.",
+        "done": "return run_command([\"tail\", \"-n\", str(lines), \"sample_app/logs/app.log\"])",
+        "title": "tail as an agent tool",
+        "note": "**Reads the end of the app log — the model picks the line count via the `lines` arg.**",
+        "lines": 2
+      }
+    ],
+    "cli_tools/repo_tool.py": [
+      {
+        "anchor": "# TODO: Lab 3 merge step — validate the pattern, walk sample_app/*.py,",
+        "done": "re.compile(pattern)",
+        "title": "Structured code search",
+        "note": [
+          "**Walks sample_app/*.py and returns matches as JSON: file, line, text.**",
+          "- Validates the regex first — bad patterns get a clear error, not a crash",
+          "- `max_results` bounds output; `truncated` tells the model results were cut"
+        ],
+        "lines": 3
+      },
+      {
+        "anchor": "# TODO: Lab 3 merge step — validate the level, parse each log line,",
+        "done": "if not os.path.isfile(LOG_FILE):",
+        "title": "Log summarizer",
+        "note": [
+          "**Parses the app log into counts by level plus the last 5 messages at one level.**",
+          "- Rejects levels other than INFO/WARNING/ERROR with a helpful error",
+          "- The agent reads a small dict instead of the whole log file"
+        ],
+        "lines": 4
+      },
+      {
+        "anchor": "# TODO: Lab 3 merge step — validate inputs, load the ticket store,",
+        "done": "if not title or not body:",
+        "title": "Ticket writer",
+        "note": [
+          "**Appends a ticket to sample_app/tickets.json and returns its generated id.**",
+          "- Title/body lengths are capped — inputs from a model need bounds",
+          "- this tool has side effects; Lab 9 puts it behind human approval"
+        ],
+        "lines": 3
+      }
+    ],
+    "agents/structured_agent.py": [
+      {
+        "anchor": "# TODO: Lab 4 merge step — invoke repo_tool.py via subprocess, parse its",
+        "done": "cmd = [sys.executable, \"cli_tools/repo_tool.py\"] + tool_args",
+        "title": "repo_tool runner with JSON parsing",
+        "note": [
+          "**One helper invokes repo_tool.py and parses its stdout as JSON.**",
+          "- Non-JSON output becomes a structured error the model can react to",
+          "- Compare with Lab 2's run_command, which passed raw text through"
+        ],
+        "lines": 3
+      },
+      {
+        "anchor": "# TODO: Lab 4 merge step — call run_tool with the search subcommand.",
+        "done": "return run_tool([\"search\", \"--pattern\", pattern])",
+        "title": "search subcommand wrapper",
+        "note": "**One-liner: the CLI's design does the heavy lifting, so the wrapper is trivial.**",
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: Lab 4 merge step — call run_tool with the tests subcommand.",
+        "done": "return run_tool([\"tests\"])",
+        "title": "tests subcommand wrapper",
+        "note": "**Returns repo_tool's structured test summary — counts and failure names only.**",
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: Lab 4 merge step — call run_tool with the log-summary subcommand.",
+        "done": "return run_tool([\"log-summary\", \"--level\", level])",
+        "title": "log-summary subcommand wrapper",
+        "note": "**Passes the model-chosen level through to the CLI's validated --level flag.**",
+        "lines": 2
+      },
+      {
+        "anchor": "# TODO: Lab 4 merge step — call run_tool with the ticket subcommand.",
+        "done": "return run_tool([\"ticket\", \"--title\", title, \"--body\", body])",
+        "title": "ticket subcommand wrapper",
+        "note": "**Two model-provided strings become CLI flags — repo_tool validates and persists.**",
+        "lines": 2
+      }
+    ],
+    "mcp_server/repo_mcp.py": [
+      {
+        "anchor": "# TODO: Lab 5 merge step — expose three more tools the same way search_code",
+        "done": "def run_tests() -> dict:",
+        "title": "Three more MCP tools",
+        "note": [
+          "**Exposes run_tests, summarize_log, and open_ticket exactly like search_code above.**",
+          "- Type hints become the JSON schema; docstrings become the tool description",
+          "- Each body is one line — the Lab 3 logic is reused unchanged"
+        ],
+        "lines": 5
+      }
+    ],
+    "agents/mcp_agent.py": [
+      {
+        "anchor": "# TODO: Lab 6 merge step — build the system prompt from the discovered",
+        "done": "lines = [",
+        "title": "Prompt from discovered tools",
+        "note": [
+          "**Builds the system prompt from tools the agent DISCOVERED at startup — nothing hardcoded.**",
+          "- Uses each tool's description first line plus its input_schema JSON",
+          "- New server tools appear in the prompt automatically on next run"
+        ],
+        "lines": 4
+      },
+      {
+        "anchor": "# TODO: Lab 6 merge step — call the tool through the MCP session, join",
+        "done": "result = await session.call_tool(tool_name, args)",
+        "title": "Tool call through the protocol",
+        "note": [
+          "**Executes one call via session.call_tool and joins text content into an observation.**",
+          "- `result.isError` marks protocol-level failures as TOOL ERROR",
+          "- Exceptions become error strings, so the loop survives bad calls"
+        ],
+        "lines": 4
+      }
+    ],
+    "mcp_server/git_mcp.py": [
+      {
+        "anchor": "# TODO: Lab 8 merge step — validate the path (no leading '-', must stay",
+        "done": "if path.startswith(\"-\"):",
+        "title": "file_history with path validation",
+        "note": [
+          "**Commits that touched one file — after checking the path is safe.**",
+          "- Rejects leading '-' (option injection) and paths outside the repo",
+          "- `--` before the path tells git it's a path, never a flag"
+        ],
+        "lines": 4
+      },
+      {
+        "anchor": "# TODO: Lab 8 merge step — enforce the guardrails: reject subcommands",
+        "done": "args = args or []",
+        "title": "Guarded git escape hatch",
+        "note": [
+          "**Flexible git access with two hard rules enforced before running anything.**",
+          "- Subcommand must be in ALLOWED_SUBCOMMANDS (read-only set)",
+          "- Any argument starting with '-' is rejected — refs and paths only"
+        ],
+        "lines": 4
+      }
+    ],
+    "agents/safe_agent.py": [
+      {
+        "anchor": "# TODO: Lab 9 merge step — the guardrail gate:",
+        "done": "ok, reason = validate_call(tool_name, args, schemas.get(tool_name, {}))",
+        "title": "The guardrail gate",
+        "note": [
+          "**Every tool call passes three checkpoints: policy validation, human approval, audited execution.**",
+          "- Denials return a DENIED observation — the agent survives and adapts",
+          "- Every decision (denied/approved/executed) lands in audit_log.jsonl"
+        ],
+        "lines": 8
+      }
+    ],
+    "eval/run_evals.py": [
+      {
+        "anchor": "# TODO: Lab 10 merge step — implement the four check types described in",
+        "done": "kind = check[\"type\"]",
+        "title": "Deterministic eval checks",
+        "note": [
+          "**Four fact-based checks — no LLM judging, just observable outcomes.**",
+          "- final_contains / final_not_empty inspect the answer; ticket_created inspects state",
+          "- max_tool_calls enforces an efficiency budget per scenario"
+        ],
+        "lines": 4
+      }
+    ]
+  },
+  "reviews": {
+    "agents/llm.py": [
+      {
+        "anchor": "GROQ_DEFAULT_MODEL = \"qwen/qwen3.8-27b\"",
+        "lines": 2,
+        "title": "The two backends",
+        "note": [
+          "**One switch for every lab: GROQ_API_KEY set means Groq's hosted model, unset means local Ollama.**",
+          "- Set it with `source scripts/setup-key.sh`; `--remove` goes back to Ollama"
+        ]
+      },
+      {
+        "anchor": "def chat(messages, temperature=0.0):",
+        "lines": 1,
+        "title": "chat: the only model call",
+        "note": [
+          "**Every agent talks to the model through this one function.**",
+          "- OpenAI-compatible client for both backends - same code, different base_url",
+          "- max_tokens and reasoning_effort=none keep Groq inside its free-tier limits"
+        ]
+      },
+      {
+        "anchor": "def observation_message(observation, steps_left):",
+        "lines": 1,
+        "title": "observation_message: the finish reminder",
+        "note": [
+          "**Wraps each tool result with 'answer now or call one more tool'.**",
+          "- Small models otherwise keep calling tools after they have the answer",
+          "- On the last allowed step it insists on a final answer"
+        ]
+      },
+      {
+        "anchor": "def extract_json(text):",
+        "lines": 1,
+        "title": "extract_json: tolerant parsing",
+        "note": [
+          "**Pulls the first balanced {...} out of a reply, even wrapped in prose or a code fence.**",
+          "- Returns None if nothing parses - the loop then asks the model to retry"
+        ]
+      },
+      {
+        "anchor": "def which_backend():",
+        "lines": 1,
+        "title": "which_backend: reporting only",
+        "note": [
+          "**Tells you (and the run banner) which backend chat() will use.**"
+        ]
+      }
+    ],
+    "agents/simple_agent.py": [
+      {
+        "anchor": "TOOLS = {",
+        "title": "The tool registry",
+        "note": [
+          "**Everything the model will ever know about a tool comes from these descriptions.**",
+          "- name -> function, plus prose and an args dict",
+          "- build_system_prompt turns this into text; the model never sees the code"
+        ],
+        "lines": 5
+      }
+    ],
+    "agents/cli_agent.py": [
+      {
+        "anchor": "timeout=120,",
+        "lines": 1,
+        "title": "Job 2: a timeout",
+        "note": [
+          "**A hung command must not hang the agent - kill it after two minutes.**"
+        ]
+      },
+      {
+        "anchor": "output = f\"exit code: {result.returncode}\\n\"",
+        "lines": 1,
+        "title": "Job 1 and 4: capture, then format",
+        "note": [
+          "**Exit code, stdout and stderr go to the model as one labelled text block.**",
+          "- The exit code is the only structured signal a raw CLI gives us"
+        ]
+      },
+      {
+        "anchor": "if len(output) > MAX_OUTPUT:",
+        "lines": 1,
+        "title": "Job 3: truncate",
+        "note": [
+          "**Long output is cut at MAX_OUTPUT so one pytest run can't flood the context.**",
+          "- Arbitrary truncation is exactly what Lab 3 designs away"
+        ]
+      }
+    ],
+    "cli_tools/repo_tool.py": [
+      {
+        "anchor": "  - clear inputs:       named arguments with types and defaults",
+        "lines": 6,
+        "title": "The design checklist",
+        "note": [
+          "**Six properties that make a CLI agent-friendly - the whole point of Lab 3.**",
+          "- Compare each one with what the Lab 2 agent had to cope with"
+        ]
+      },
+      {
+        "anchor": "def do_tests():",
+        "lines": 1,
+        "title": "do_tests: the worked example",
+        "note": [
+          "**Runs pytest and returns a small JSON dict instead of a screen of text.**",
+          "- ok/passed/failed/failures: the shape every other subcommand copies",
+          "- Model it when you merge do_search, do_log_summary and do_ticket"
+        ]
+      }
+    ],
+    "mcp_server/repo_mcp.py": [
+      {
+        "anchor": "def search_code(pattern: str, max_results: int = 20) -> dict:",
+        "lines": 1,
+        "title": "search_code: the worked example",
+        "note": [
+          "**One decorator turns a typed Python function into an MCP tool.**",
+          "- Name, description (docstring) and input schema (type hints) are generated",
+          "- The body is a one-line call into the Lab 3 logic - same capability, new surface"
+        ]
+      }
+    ],
+    "mcp_server/try_server.py": [
+      {
+        "anchor": "params = StdioServerParameters(",
+        "endAnchor": ")",
+        "title": "1. Launch the server",
+        "note": [
+          "**The client starts the server as a subprocess and talks to it over stdin/stdout.**",
+          "- No import, no URL - just a script path"
+        ]
+      },
+      {
+        "anchor": "await session.initialize()",
+        "lines": 1,
+        "title": "2. Handshake",
+        "note": [
+          "**initialize() is the protocol handshake - versions and capabilities are exchanged.**"
+        ]
+      },
+      {
+        "anchor": "tools = await session.list_tools()",
+        "lines": 1,
+        "title": "3. Discover tools",
+        "note": [
+          "**The server advertises its tools; the client learns names, descriptions and schemas at runtime.**",
+          "- This is what lets the Lab 6 agent work with any server unchanged"
+        ]
+      },
+      {
+        "anchor": "result = await session.call_tool(\"search_code\", {\"pattern\": \"total_value\"})",
+        "lines": 1,
+        "title": "4. Call a tool",
+        "note": [
+          "**A call is a name plus a JSON argument object - the same shape the agent will emit.**",
+          "- The result comes back as content parts; text parts carry the JSON"
+        ]
+      }
+    ],
+    "agents/mcp_agent.py": [
+      {
+        "anchor": "args=[server_script],",
+        "lines": 1,
+        "title": "(a) No import - just a script path",
+        "note": [
+          "**The agent never imports the server; it launches whatever script you point it at.**",
+          "- Lab 8 swaps in git_mcp.py with --server and nothing else changes"
+        ]
+      },
+      {
+        "anchor": "lines.append(f\"  input schema: {json.dumps(tool.input_schema)}\")",
+        "lines": 1,
+        "title": "(b) Prompt built from discovery",
+        "note": [
+          "**Tool names, descriptions and schemas come from list_tools(), not from code.**"
+        ]
+      },
+      {
+        "anchor": "if result.is_error:",
+        "lines": 1,
+        "title": "(c) Errors travel in-protocol",
+        "note": [
+          "**A failed call is flagged with is_error and still returns text the model can react to.**"
+        ]
+      }
+    ],
+    "agents/compare_agents.py": [
+      {
+        "anchor": "cli_run = run_captured(\"cli\", lambda: structured_agent.run_agent(task))",
+        "lines": 2,
+        "title": "Same task, two surfaces",
+        "note": [
+          "**Runs the Lab 4 (CLI) and Lab 6 (MCP) agents back to back on one task.**",
+          "- Same model, same loop - only the tool surface differs"
+        ]
+      },
+      {
+        "anchor": "steps = sum(1 for line in transcript.splitlines() if line.startswith(\"--- step\"))",
+        "lines": 1,
+        "title": "Counting tool calls",
+        "note": [
+          "**Tool calls are counted from the captured transcript's '--- step' lines.**"
+        ]
+      },
+      {
+        "anchor": "path = os.path.join(TRANSCRIPTS, f\"{run['label']}_transcript.md\")",
+        "lines": 1,
+        "title": "Transcripts to compare",
+        "note": [
+          "**Each run's full transcript lands in transcripts/ - open both side by side in step 3.**"
+        ]
+      }
+    ],
+    "mcp_server/git_mcp.py": [
+      {
+        "anchor": "ALLOWED_SUBCOMMANDS = {\"log\", \"show\", \"status\", \"branch\", \"shortlog\"}",
+        "lines": 1,
+        "title": "The allowlist",
+        "note": [
+          "**Enumerate goodness: only these read-only subcommands can ever run.**",
+          "- push, commit, reset... are refused by name, with the allowed list in the error"
+        ]
+      },
+      {
+        "anchor": "def _git(args, timeout=30):",
+        "lines": 1,
+        "title": "_git: the one place that shells out",
+        "note": [
+          "**Every tool funnels through here - timeout, error capture and truncation live once.**"
+        ]
+      },
+      {
+        "anchor": "def recent_commits(count: int = 5) -> dict:",
+        "lines": 1,
+        "title": "recent_commits: intent-sized",
+        "note": [
+          "**One question, no git flags exposed - the model can't misuse what it can't reach.**",
+          "- Turns git log text into structured commit dicts",
+          "- Compare with git_readonly, the flexible-but-guarded escape hatch you merge in"
+        ]
+      }
+    ],
+    "guardrails/policy.py": [
+      {
+        "anchor": "ALLOWED_TOOLS = {\"search_code\", \"run_tests\", \"summarize_log\", \"open_ticket\"}",
+        "lines": 1,
+        "title": "Control point 1: allowlist",
+        "note": [
+          "**Only these tools may run, whatever the server advertises.**"
+        ]
+      },
+      {
+        "anchor": "APPROVAL_REQUIRED = {\"open_ticket\"}",
+        "lines": 1,
+        "title": "Control point 2: human approval",
+        "note": [
+          "**Side-effecting tools stop and ask you before executing - the [y/N] prompt in step 4.**"
+        ]
+      },
+      {
+        "anchor": "def validate_call(tool_name, args, schema):",
+        "lines": 1,
+        "title": "Control point 3: validation",
+        "note": [
+          "**Checks a proposed call against the allowlist and the tool's own schema.**",
+          "- Missing/unexpected arguments and oversized strings are rejected with a reason",
+          "- The reason goes back to the model as a DENIED observation"
+        ]
+      },
+      {
+        "anchor": "def audit(event, **details):",
+        "lines": 1,
+        "title": "Control point 4: audit log",
+        "note": [
+          "**One JSON line per decision in audit_log.jsonl - you read it in step 5.**",
+          "- Executed, denied, approved_by_human, rejected_by_human all land here"
+        ]
+      }
+    ],
+    "eval/scenarios.json": [
+      {
+        "anchor": "\"task\": \"Run the test suite and report which test fails and why.\",",
+        "lines": 1,
+        "title": "A scenario is a task...",
+        "note": [
+          "**Each scenario gives the agent one realistic task - the same kind you ran all day.**"
+        ]
+      },
+      {
+        "anchor": "{ \"type\": \"final_contains\", \"value\": \"total_value\" },",
+        "lines": 2,
+        "title": "...plus deterministic checks",
+        "note": [
+          "**Checks are facts, not opinions: the answer names the test, within a step budget.**",
+          "- No LLM judging the LLM - every check is code you merge in step 2",
+          "- Types: final_contains, final_not_empty, ticket_created, max_tool_calls"
+        ]
+      },
+      {
+        "anchor": "{ \"type\": \"ticket_created\" },",
+        "lines": 1,
+        "title": "A side-effect check",
+        "note": [
+          "**Did a ticket actually appear in the store? Checked on disk, not in the transcript.**"
+        ]
+      }
+    ]
   }
 }

@@ -1,6 +1,6 @@
 # Hands of AI — Building AI Agents That Act: Tools via CLIs and MCP
 
-**Full-day hands-on workshop — Revision 1.4 — 09/20/26**
+**Full-day hands-on workshop — Revision 1.5 — 09/20/26**
 
 AI agents become useful when they can act. In this workshop you build a practical AI agent
 that uses tools through two different execution surfaces — command-line interfaces and the
@@ -155,6 +155,7 @@ If you prefer to run locally instead of in a Codespace, you need:
 | `sample_app/` | The small application (with a bug!) that your agent investigates all day |
 | `extra/` | Completed versions of lab code used in the diff-merge steps |
 | `scripts/` | Setup scripts: Ollama install/start, `setup-key.sh` (Groq key), `check-groq.sh` |
+| `merge-info.json` | Hover notes and highlights for the Merge Info VS Code extension (installed on attach from `.devcontainer/`) |
 | `labs.md` | **The lab guide — start here** |
 
 ## Troubleshooting
@@ -178,6 +179,10 @@ If you prefer to run locally instead of in a Codespace, you need:
 - **`No module named 'mcp.server.fastmcp'`**: the labs target MCP Python SDK **2.x**
   (`MCPServer`); `requirements.txt` pins `mcp>=2,<3`. Reinstall with
   `pip install -r requirements.txt`.
+- **No hover popups / yellow or blue highlights in the editor**: the Merge Info extension installs
+  in the background when the codespace attaches. Check `cat /tmp/merge-info-install.log`, or install
+  it by hand: `code --install-extension .devcontainer/merge-info-0.3.1.vsix --force`, then reload the
+  window. Toggle the highlights with the *Merge Info: Toggle ...* commands in the palette.
 - **`ModuleNotFoundError`**: make sure the virtual environment is active — `source py_env/bin/activate`
   from the repo root, or open a new terminal.
 
