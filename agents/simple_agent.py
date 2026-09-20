@@ -1,0 +1,109 @@
+"""Lab 1: A minimal agent loop.
+
+An agent becomes useful when it can act. This program is the smallest
+useful version of that idea: the model reasons over a task, chooses a
+tool, we execute it, and the result goes back into the conversation —
+repeating until the model can give a final answer.
+
+The tools here are plain Python functions. In later labs the same loop
+will drive tools that live behind CLIs and MCP servers.
+"""
+
+import json
+import os
+
+from llm import chat, extract_json, which_backend
+
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+# ---------------------------------------------------------------------------
+# Tools: plain Python functions
+# ---------------------------------------------------------------------------
+
+def calculator(expression):
+    """Evaluate a simple arithmetic expression like '19.99 * 5 + 50'."""
+    allowed = set("0123456789.+-*/() ")
+    if not expression or not set(expression) <= allowed:
+        return "ERROR: only numbers and + - * / ( ) are allowed"
+    try:
+        return str(eval(expression, {"__builtins__": {}}, {}))
+    except Exception as e:
+        return f"ERROR: {e}"
+
+
+def read_file(path):
+    """Return the first 2000 characters of a file inside this repo."""
+    full = os.path.abspath(os.path.join(REPO_ROOT, path))
+    if not full.startswith(REPO_ROOT):
+        return "ERROR: path is outside the repository"
+    if not os.path.isfile(full):
+        return f"ERROR: no such file: {path}"
+    with open(full, "r", errors="replace") as f:
+        return f.read(2000)
+
+
+def list_files(directory):
+    """List the files in a directory inside this repo."""
+    full = os.path.abspath(os.path.join(REPO_ROOT, directory))
+    if not full.startswith(REPO_ROOT):
+        return "ERROR: path is outside the repository"
+    if not os.path.isdir(full):
+        return f"ERROR: no such directory: {directory}"
+    return "\n".join(sorted(os.listdir(full)))
+
+
+TOOLS = {
+    "calculator": {
+        "function": calculator,
+        "description": "Evaluate an arithmetic expression.",
+        "args": {"expression": "string, e.g. '19.99 * 5'"},
+    },
+    "read_file": {
+        "function": read_file,
+        "description": "Read the first 2000 characters of a file in this repo.",
+        "args": {"path": "string, repo-relative path, e.g. 'sample_app/inventory.py'"},
+    },
+    "list_files": {
+        "function": list_files,
+        "description": "List the files in a directory in this repo.",
+        "args": {"directory": "string, repo-relative path, e.g. 'sample_app'"},
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# The agent loop
+# ---------------------------------------------------------------------------
+
+def build_system_prompt():
+    """Describe the job and the available tools to the model."""
+    # TODO: Lab 1 merge step — build the system prompt that tells the model
+    # what tools exist, how to call one, and how to give a final answer.
+    raise NotImplementedError("merge in the completed code (see labs.md)")
+
+
+def run_agent(task, max_steps=8):
+    print(f"[backend: {which_backend()}]")
+    messages = [
+        {"role": "system", "content": build_system_prompt()},
+        {"role": "user", "content": task},
+    ]
+    for step in range(1, max_steps + 1):
+        # TODO: Lab 1 merge step — the reason/act/observe loop goes here:
+        #   1. ask the model what to do next
+        #   2. parse its JSON action
+        #   3. if it's a final answer, print and return it
+        #   4. otherwise execute the chosen tool and append the observation
+        raise NotImplementedError("merge in the completed code (see labs.md)")
+    print("\n=== Gave up: reached max steps without a final answer ===")
+    return None
+
+
+if __name__ == "__main__":
+    import sys
+
+    task = " ".join(sys.argv[1:]) or (
+        "What files are in the sample_app directory, and what is 19.99 * 5?"
+    )
+    run_agent(task)

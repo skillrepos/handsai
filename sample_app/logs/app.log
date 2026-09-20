@@ -1,0 +1,30 @@
+2026-08-06 09:12:01 INFO  inventory-svc starting up (build 4711)
+2026-08-06 09:12:01 INFO  loaded 42 items from datastore
+2026-08-06 09:14:22 INFO  add_item widget qty=5 price=19.99
+2026-08-06 09:14:30 INFO  add_item gadget qty=10 price=5.00
+2026-08-06 09:16:02 INFO  nightly report requested by scheduler
+2026-08-06 09:16:03 ERROR total_value mismatch: ledger expected 149.95 but service returned 39.99
+2026-08-06 09:16:03 WARNING nightly report aborted, retrying in 300s
+2026-08-06 09:21:03 INFO  nightly report requested by scheduler
+2026-08-06 09:21:04 ERROR total_value mismatch: ledger expected 149.95 but service returned 39.99
+2026-08-06 09:21:04 WARNING nightly report aborted, retrying in 300s
+2026-08-06 09:26:04 INFO  nightly report requested by scheduler
+2026-08-06 09:26:05 ERROR total_value mismatch: ledger expected 149.95 but service returned 39.99
+2026-08-06 09:26:05 ERROR nightly report failed permanently after 3 attempts
+2026-08-06 09:30:11 INFO  remove_item gadget qty=4
+2026-08-06 09:31:40 INFO  add_item sprocket qty=3 price=12.50
+2026-08-06 09:45:19 WARNING slow datastore write (612ms)
+2026-08-06 10:02:33 INFO  add_item widget qty=2 price=19.99
+2026-08-06 10:15:47 ERROR total_value mismatch: ledger expected 207.43 but service returned 53.49
+2026-08-06 10:15:47 WARNING finance sync skipped due to value mismatch
+2026-08-06 10:30:00 INFO  hourly heartbeat ok
+2026-08-06 11:30:00 INFO  hourly heartbeat ok
+2026-08-06 12:30:00 INFO  hourly heartbeat ok
+2026-08-06 13:11:09 WARNING slow datastore write (734ms)
+2026-08-06 13:30:00 INFO  hourly heartbeat ok
+2026-08-06 14:05:21 ERROR total_value mismatch: ledger expected 207.43 but service returned 53.49
+2026-08-06 14:05:21 WARNING finance sync skipped due to value mismatch
+2026-08-06 14:30:00 INFO  hourly heartbeat ok
+2026-08-06 15:30:00 INFO  hourly heartbeat ok
+2026-08-06 16:00:44 INFO  daily backup completed in 4.2s
+2026-08-06 16:30:00 INFO  hourly heartbeat ok

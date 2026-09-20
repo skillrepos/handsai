@@ -1,0 +1,26 @@
+[
+  {
+    "name": "find-failing-test",
+    "task": "Run the test suite and report which test fails and why.",
+    "checks": [
+      { "type": "final_contains", "value": "total_value" },
+      { "type": "max_tool_calls", "value": 6 }
+    ]
+  },
+  {
+    "name": "log-triage",
+    "task": "Summarize the errors in the application log and say what they have in common.",
+    "checks": [
+      { "type": "final_not_empty" },
+      { "type": "final_contains", "value": "mismatch" }
+    ]
+  },
+  {
+    "name": "open-ticket",
+    "task": "Open a ticket titled 'Nightly report failing' with a body summarizing the root cause of the failing nightly report.",
+    "checks": [
+      { "type": "ticket_created" },
+      { "type": "final_not_empty" }
+    ]
+  }
+]

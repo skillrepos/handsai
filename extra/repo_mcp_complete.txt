@@ -1,0 +1,67 @@
+"""Lab 5: The same capabilities, exposed as an MCP server.
+
+The Model Context Protocol gives tools a standard, discoverable surface:
+each tool has a name, a description (from the docstring), and a typed
+input schema (from the type hints) — all generated for us by FastMCP.
+
+Note what we did NOT have to write: no argument parser, no JSON
+formatting conventions, no help text. The protocol carries all of that.
+The actual logic is imported, unchanged, from the Lab 3 CLI tool.
+
+Run it with:  python mcp_server/repo_mcp.py
+(then press Ctrl+C to stop — normally a client launches it for you)
+"""
+
+import os
+import sys
+
+# Make the repo root importable so we can reuse the Lab 3 logic
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from mcp.server.fastmcp import FastMCP
+
+from cli_tools.repo_tool import do_log_summary, do_search, do_tests, do_ticket
+
+mcp = FastMCP("repo-tools")
+
+
+@mcp.tool()
+def search_code(pattern: str, max_results: int = 20) -> dict:
+    """Search the sample app source code for a regex pattern.
+
+    Returns the match count and a bounded list of matches, each with
+    file, line number, and the matching text.
+    """
+    return do_search(pattern, max_results)
+
+
+@mcp.tool()
+def run_tests() -> dict:
+    """Run the sample app's test suite.
+
+    Returns passed/failed counts and the names of any failing tests.
+    """
+    return do_tests()
+
+
+@mcp.tool()
+def summarize_log(level: str = "ERROR") -> dict:
+    """Summarize the application log.
+
+    Returns entry counts by level (INFO, WARNING, ERROR) and the most
+    recent messages at the requested level.
+    """
+    return do_log_summary(level)
+
+
+@mcp.tool()
+def open_ticket(title: str, body: str) -> dict:
+    """Open a ticket in the ticket store.
+
+    Returns the newly created ticket, including its assigned id.
+    """
+    return do_ticket(title, body)
+
+
+if __name__ == "__main__":
+    mcp.run()  # serves the tools over stdio

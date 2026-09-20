@@ -1,0 +1,190 @@
+{
+  "files": {
+    "extra/simple_agent_complete.txt": [
+      {
+        "anchor": "lines = [",
+        "title": "System prompt from tool registry",
+        "note": [
+          "**Builds the text that teaches the model what tools exist and how to call one.**",
+          "- Each TOOLS entry becomes one description line — the model knows only what's written here",
+          "- Ends with the JSON action format: `{\"tool\":...}` or `{\"final\":...}`"
+        ]
+      },
+      {
+        "anchor": "reply = chat(messages)",
+        "endAnchor": "messages.append({\"role\": \"user\", \"content\": f\"Observation:\\n{observation}\"})",
+        "title": "The reason/act/observe loop",
+        "note": [
+          "**The heart of every agent: ask the model, parse its action, run the tool, feed back the result.**",
+          "- Unparseable replies get a retry request instead of a crash",
+          "- `final` ends the loop; otherwise the observation becomes the next user message"
+        ]
+      }
+    ],
+    "extra/cli_agent_complete.txt": [
+      {
+        "anchor": "try:",
+        "title": "Safe subprocess runner",
+        "note": [
+          "**Runs any CLI command and packages stdout, stderr, and exit code for the model.**",
+          "- 120s timeout stops hung commands from freezing the agent",
+          "- Output truncated at MAX_OUTPUT chars so it can't flood the context"
+        ]
+      },
+      {
+        "anchor": "return run_command([\"grep\", \"-rn\", pattern, \"sample_app\", \"--include=*.py\"])",
+        "title": "grep as an agent tool",
+        "note": "**Recursive grep over the sample app — the model gets raw match lines with file:line prefixes.**"
+      },
+      {
+        "anchor": "return run_command([\"python\", \"-m\", \"pytest\", \"sample_app\", \"--tb=short\", \"-q\"])",
+        "title": "pytest as an agent tool",
+        "note": "**Runs the test suite — the model must parse pytest's human-oriented output itself.**"
+      },
+      {
+        "anchor": "return run_command([\"git\", \"log\", \"--oneline\", \"-5\"])",
+        "title": "git log as an agent tool",
+        "note": "**Last five commits, one per line — simple, but format is git's choice, not ours.**"
+      },
+      {
+        "anchor": "return run_command([\"tail\", \"-n\", str(lines), \"sample_app/logs/app.log\"])",
+        "title": "tail as an agent tool",
+        "note": "**Reads the end of the app log — the model picks the line count via the `lines` arg.**"
+      }
+    ],
+    "extra/repo_tool_complete.txt": [
+      {
+        "anchor": "try:",
+        "title": "Structured code search",
+        "note": [
+          "**Walks sample_app/*.py and returns matches as JSON: file, line, text.**",
+          "- Validates the regex first — bad patterns get a clear error, not a crash",
+          "- `max_results` bounds output; `truncated` tells the model results were cut"
+        ]
+      },
+      {
+        "anchor": "if not os.path.isfile(LOG_FILE):",
+        "title": "Log summarizer",
+        "note": [
+          "**Parses the app log into counts by level plus the last 5 messages at one level.**",
+          "- Rejects levels other than INFO/WARNING/ERROR with a helpful error",
+          "- The agent reads a small dict instead of the whole log file"
+        ]
+      },
+      {
+        "anchor": "if not title or not body:",
+        "title": "Ticket writer",
+        "note": [
+          "**Appends a ticket to sample_app/tickets.json and returns its generated id.**",
+          "- Title/body lengths are capped — inputs from a model need bounds",
+          "- this tool has side effects; Lab 9 puts it behind human approval"
+        ]
+      }
+    ],
+    "extra/structured_agent_complete.txt": [
+      {
+        "anchor": "cmd = [sys.executable, \"cli_tools/repo_tool.py\"] + tool_args",
+        "title": "repo_tool runner with JSON parsing",
+        "note": [
+          "**One helper invokes repo_tool.py and parses its stdout as JSON.**",
+          "- Non-JSON output becomes a structured error the model can react to",
+          "- Compare with Lab 2's run_command, which passed raw text through"
+        ]
+      },
+      {
+        "anchor": "return run_tool([\"search\", \"--pattern\", pattern])",
+        "title": "search subcommand wrapper",
+        "note": "**One-liner: the CLI's design does the heavy lifting, so the wrapper is trivial.**"
+      },
+      {
+        "anchor": "return run_tool([\"tests\"])",
+        "title": "tests subcommand wrapper",
+        "note": "**Returns repo_tool's structured test summary — counts and failure names only.**"
+      },
+      {
+        "anchor": "return run_tool([\"log-summary\", \"--level\", level])",
+        "title": "log-summary subcommand wrapper",
+        "note": "**Passes the model-chosen level through to the CLI's validated --level flag.**"
+      },
+      {
+        "anchor": "return run_tool([\"ticket\", \"--title\", title, \"--body\", body])",
+        "title": "ticket subcommand wrapper",
+        "note": "**Two model-provided strings become CLI flags — repo_tool validates and persists.**"
+      }
+    ],
+    "extra/repo_mcp_complete.txt": [
+      {
+        "anchor": "def run_tests() -> dict:",
+        "endAnchor": "return do_ticket(title, body)",
+        "title": "Three more MCP tools",
+        "note": [
+          "**Exposes run_tests, summarize_log, and open_ticket exactly like search_code above.**",
+          "- Type hints become the JSON schema; docstrings become the tool description",
+          "- Each body is one line — the Lab 3 logic is reused unchanged"
+        ]
+      }
+    ],
+    "extra/mcp_agent_complete.txt": [
+      {
+        "anchor": "lines = [",
+        "title": "Prompt from discovered tools",
+        "note": [
+          "**Builds the system prompt from tools the agent DISCOVERED at startup — nothing hardcoded.**",
+          "- Uses each tool's description first line plus its inputSchema JSON",
+          "- New server tools appear in the prompt automatically on next run"
+        ]
+      },
+      {
+        "anchor": "try:",
+        "title": "Tool call through the protocol",
+        "note": [
+          "**Executes one call via session.call_tool and joins text content into an observation.**",
+          "- `result.isError` marks protocol-level failures as TOOL ERROR",
+          "- Exceptions become error strings, so the loop survives bad calls"
+        ]
+      }
+    ],
+    "extra/git_mcp_complete.txt": [
+      {
+        "anchor": "if path.startswith(\"-\"):",
+        "title": "file_history with path validation",
+        "note": [
+          "**Commits that touched one file — after checking the path is safe.**",
+          "- Rejects leading '-' (option injection) and paths outside the repo",
+          "- `--` before the path tells git it's a path, never a flag"
+        ]
+      },
+      {
+        "anchor": "args = args or []",
+        "title": "Guarded git escape hatch",
+        "note": [
+          "**Flexible git access with two hard rules enforced before running anything.**",
+          "- Subcommand must be in ALLOWED_SUBCOMMANDS (read-only set)",
+          "- Any argument starting with '-' is rejected — refs and paths only"
+        ]
+      }
+    ],
+    "extra/safe_agent_complete.txt": [
+      {
+        "anchor": "ok, reason = validate_call(tool_name, args, schemas.get(tool_name, {}))",
+        "title": "The guardrail gate",
+        "note": [
+          "**Every tool call passes three checkpoints: policy validation, human approval, audited execution.**",
+          "- Denials return a DENIED observation — the agent survives and adapts",
+          "- Every decision (denied/approved/executed) lands in audit_log.jsonl"
+        ]
+      }
+    ],
+    "extra/run_evals_complete.txt": [
+      {
+        "anchor": "kind = check[\"type\"]",
+        "title": "Deterministic eval checks",
+        "note": [
+          "**Four fact-based checks — no LLM judging, just observable outcomes.**",
+          "- final_contains / final_not_empty inspect the answer; ticket_created inspects state",
+          "- max_tool_calls enforces an efficiency budget per scenario"
+        ]
+      }
+    ]
+  }
+}
