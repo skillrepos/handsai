@@ -50,12 +50,12 @@ def run_command(cmd):
 
 def grep_code(pattern):
     """Search the sample app's source for a pattern using grep."""
-    return run_command(["grep", "-rn", pattern, "sample_app", "--include=*.py"])
+    return run_command(["grep", "-rn", pattern, "inventory_service", "--include=*.py"])
 
 
 def run_tests():
     """Run the sample app's test suite with pytest."""
-    return run_command(["python", "-m", "pytest", "sample_app", "--tb=short", "-q"])
+    return run_command(["python", "-m", "pytest", "inventory_service", "--tb=short", "-q"])
 
 
 def git_history():
@@ -65,7 +65,7 @@ def git_history():
 
 def tail_log(lines):
     """Show the last N lines of the application log using tail."""
-    return run_command(["tail", "-n", str(lines), "sample_app/logs/app.log"])
+    return run_command(["tail", "-n", str(lines), "inventory_service/logs/app.log"])
 
 
 TOOLS = {
@@ -144,7 +144,9 @@ def run_agent(task, max_steps=8):
             except TypeError as e:
                 observation = f"ERROR: bad arguments: {e}"
         print(f"--- step {step}: {tool_name}({json.dumps(args)})")
-        print(f"    observation: {observation[:200]}")
+        shown = observation[:200]
+        more = " ... [truncated for display - the model receives the full text]" if len(observation) > 200 else ""
+        print(f"    observation: {shown}{more}")
         messages.append({"role": "assistant", "content": json.dumps(action)})
         messages.append({"role": "user", "content": observation_message(observation, max_steps - step)})
     print("\n=== Gave up: reached max steps without a final answer ===")

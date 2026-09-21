@@ -33,6 +33,7 @@
             "extensions": ["mathematic.vscode-pdf", "vstirbu.vscode-mermaid-preview"]
         }
     },
+    "waitFor": "postCreateCommand",
     "postCreateCommand": "bash -i scripts/pysetup.sh py_env && bash -i scripts/startup_ollama.sh",
     "postAttachCommand": {
         "ollama": "bash scripts/startOllama.sh",

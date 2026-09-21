@@ -128,7 +128,9 @@ def run_agent(task, max_steps=8):
             except TypeError as e:
                 observation = f"ERROR: bad arguments: {e}"
         print(f"--- step {step}: {tool_name}({json.dumps(args)})")
-        print(f"    observation: {observation[:200]}")
+        shown = observation[:200]
+        more = " ... [truncated for display - the model receives the full text]" if len(observation) > 200 else ""
+        print(f"    observation: {shown}{more}")
         messages.append({"role": "assistant", "content": json.dumps(action)})
         messages.append({"role": "user", "content": observation_message(observation, max_steps - step)})
     print("\n=== Gave up: reached max steps without a final answer ===")

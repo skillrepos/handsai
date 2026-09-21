@@ -2,7 +2,7 @@
 
 This launches an MCP server as a subprocess, connects to it over stdio,
 lists the tools it advertises (with their auto-generated schemas), and
-calls one tool so you can see a result round-trip.
+calls one tool so you can watch a call go out and the result come back.
 
 Usage:
   python mcp_server/try_server.py                          # uses repo_mcp.py

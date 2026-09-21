@@ -113,7 +113,9 @@ async def run_agent(task, server_script=DEFAULT_SERVER, max_steps=8):
                 else:
                     observation = await guarded_call(session, schemas, tool_name, args)
                 print(f"--- step {step}: {tool_name}({json.dumps(args)})")
-                print(f"    observation: {' '.join(observation.split())[:200]}")
+                flat = " ".join(observation.split())
+                more = " ... [truncated for display - the model receives the full text]" if len(flat) > 200 else ""
+                print(f"    observation: {flat[:200]}{more}")
                 messages.append({"role": "assistant", "content": json.dumps(action)})
                 messages.append({"role": "user", "content": observation_message(observation, max_steps - step)})
             print("\n=== Gave up: reached max steps without a final answer ===")

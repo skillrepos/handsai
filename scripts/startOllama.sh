@@ -1,20 +1,43 @@
 #!/usr/bin/env bash
-# Re-attach: make sure the Ollama server is running and the model is loaded
-# (used by postAttachCommand). OLLAMA_KEEP_ALIVE=-1 keeps the model in memory
-# between labs; the curl below loads it now so the first lab doesn't pay for it.
-MODEL=${OLLAMA_MODEL:-llama3.2:3b}
-if ! command -v ollama &> /dev/null; then
-    echo "Ollama is not installed (the Codespace setup step did not finish)."
-    echo "Run:  bash scripts/startup_ollama.sh"
-    exit 1
+# Make sure the Ollama server is running and the workshop model is loaded.
+#
+# Safe to run as often as you like: when everything is already up it costs one
+# local HTTP call and exits. Run it any time Ollama looks unresponsive:
+#
+#     bash scripts/startOllama.sh
+#
+# --quiet prints only when something was actually wrong (used by the ~/.bashrc
+# check that runs in every new terminal).
+set -u
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=scripts/ollama-lib.sh
+source "$SCRIPT_DIR/ollama-lib.sh"
+
+QUIET=""
+case "${1:-}" in
+    -q | --quiet) QUIET="quiet" ;;
+esac
+
+if ! ollama_installed; then
+    # The Codespace setup step never finished - finish it now instead of
+    # handing the student a command to run.
+    [ -z "$QUIET" ] && echo "Ollama is not installed yet - running the full setup..."
+    exec bash "$SCRIPT_DIR/startup_ollama.sh"
 fi
-if ! curl -s http://localhost:11434/api/tags > /dev/null; then
-    echo "Starting Ollama server..."
-    OLLAMA_KEEP_ALIVE=-1 nohup ollama serve > /tmp/ollama.log 2>&1 &
-    for i in {1..30}; do
-        curl -s http://localhost:11434/api/tags > /dev/null && break
-        sleep 1
-    done
+
+ollama_ensure_server 60 "$QUIET" || exit 1
+
+if ollama_have_model "$OLLAMA_MODEL"; then
+    ollama_warm_model_detached "$OLLAMA_MODEL"
+    [ -z "$QUIET" ] && echo "Ollama server is running with $OLLAMA_MODEL."
+elif [ -n "$QUIET" ]; then
+    # Don't block a new terminal on a multi-minute download.
+    echo "Ollama is running, but model $OLLAMA_MODEL is not downloaded."
+    echo "Run: bash $SCRIPT_DIR/startup_ollama.sh"
+else
+    ollama_ensure_model "$OLLAMA_MODEL" || exit 1
+    ollama_warm_model_detached "$OLLAMA_MODEL"
+    echo "Ollama server is running with $OLLAMA_MODEL."
 fi
-curl -s http://localhost:11434/api/generate -d "{\"model\": \"$MODEL\", \"keep_alive\": -1}" > /dev/null &
-echo "Ollama server is running."
+exit 0

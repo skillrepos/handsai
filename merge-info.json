@@ -28,16 +28,16 @@
         "note": [
           "**Runs any CLI command and packages stdout, stderr, and exit code for the model.**",
           "- 120s timeout stops hung commands from freezing the agent",
-          "- Output truncated at MAX_OUTPUT chars so it can't flood the context"
+          "- Output cut off at MAX_OUTPUT chars so it can't fill the model's context"
         ]
       },
       {
-        "anchor": "return run_command([\"grep\", \"-rn\", pattern, \"sample_app\", \"--include=*.py\"])",
+        "anchor": "return run_command([\"grep\", \"-rn\", pattern, \"inventory_service\", \"--include=*.py\"])",
         "title": "grep as an agent tool",
-        "note": "**Recursive grep over the sample app — the model gets raw match lines with file:line prefixes.**"
+        "note": "**Recursive grep over the inventory service — the model gets raw match lines with file:line prefixes.**"
       },
       {
-        "anchor": "return run_command([\"python\", \"-m\", \"pytest\", \"sample_app\", \"--tb=short\", \"-q\"])",
+        "anchor": "return run_command([\"python\", \"-m\", \"pytest\", \"inventory_service\", \"--tb=short\", \"-q\"])",
         "title": "pytest as an agent tool",
         "note": "**Runs the test suite — the model must parse pytest's human-oriented output itself.**"
       },
@@ -47,7 +47,7 @@
         "note": "**Last five commits, one per line — simple, but format is git's choice, not ours.**"
       },
       {
-        "anchor": "return run_command([\"tail\", \"-n\", str(lines), \"sample_app/logs/app.log\"])",
+        "anchor": "return run_command([\"tail\", \"-n\", str(lines), \"inventory_service/logs/app.log\"])",
         "title": "tail as an agent tool",
         "note": "**Reads the end of the app log — the model picks the line count via the `lines` arg.**"
       }
@@ -57,9 +57,9 @@
         "anchor": "try:",
         "title": "Structured code search",
         "note": [
-          "**Walks sample_app/*.py and returns matches as JSON: file, line, text.**",
+          "**Walks inventory_service/*.py and returns matches as JSON: file, line, text.**",
           "- Validates the regex first — bad patterns get a clear error, not a crash",
-          "- `max_results` bounds output; `truncated` tells the model results were cut"
+          "- `max_results` caps how much comes back; `truncated` tells the model results were cut"
         ]
       },
       {
@@ -75,8 +75,8 @@
         "anchor": "if not title or not body:",
         "title": "Ticket writer",
         "note": [
-          "**Appends a ticket to sample_app/tickets.json and returns its generated id.**",
-          "- Title/body lengths are capped — inputs from a model need bounds",
+          "**Appends a ticket to inventory_service/tickets.json and returns its generated id.**",
+          "- Title/body lengths are capped — input coming from a model needs limits",
           "- this tool has side effects; Lab 9 puts it behind human approval"
         ]
       }
@@ -156,7 +156,7 @@
       },
       {
         "anchor": "args = args or []",
-        "title": "Guarded git escape hatch",
+        "title": "Guarded general-purpose git tool",
         "note": [
           "**Flexible git access with two hard rules enforced before running anything.**",
           "- Subcommand must be in ALLOWED_SUBCOMMANDS (read-only set)",
@@ -178,11 +178,11 @@
     "extra/run_evals_complete.txt": [
       {
         "anchor": "kind = check[\"type\"]",
-        "title": "Deterministic eval checks",
+        "title": "Fact-based eval checks",
         "note": [
           "**Four fact-based checks — no LLM judging, just observable outcomes.**",
           "- final_contains / final_not_empty inspect the answer; ticket_created inspects state",
-          "- max_tool_calls enforces an efficiency budget per scenario"
+          "- max_tool_calls enforces a step budget per scenario"
         ]
       }
     ]
@@ -220,20 +220,20 @@
         "note": [
           "**Runs any CLI command and packages stdout, stderr, and exit code for the model.**",
           "- 120s timeout stops hung commands from freezing the agent",
-          "- Output truncated at MAX_OUTPUT chars so it can't flood the context"
+          "- Output cut off at MAX_OUTPUT chars so it can't fill the model's context"
         ],
         "lines": 3
       },
       {
         "anchor": "# TODO: Lab 2 merge step — call run_command with the right grep invocation.",
-        "done": "return run_command([\"grep\", \"-rn\", pattern, \"sample_app\", \"--include=*.py\"])",
+        "done": "return run_command([\"grep\", \"-rn\", pattern, \"inventory_service\", \"--include=*.py\"])",
         "title": "grep as an agent tool",
-        "note": "**Recursive grep over the sample app — the model gets raw match lines with file:line prefixes.**",
+        "note": "**Recursive grep over the inventory service — the model gets raw match lines with file:line prefixes.**",
         "lines": 2
       },
       {
         "anchor": "# TODO: Lab 2 merge step — call run_command with the right pytest invocation.",
-        "done": "return run_command([\"python\", \"-m\", \"pytest\", \"sample_app\", \"--tb=short\", \"-q\"])",
+        "done": "return run_command([\"python\", \"-m\", \"pytest\", \"inventory_service\", \"--tb=short\", \"-q\"])",
         "title": "pytest as an agent tool",
         "note": "**Runs the test suite — the model must parse pytest's human-oriented output itself.**",
         "lines": 2
@@ -247,7 +247,7 @@
       },
       {
         "anchor": "# TODO: Lab 2 merge step — call run_command with the right tail invocation.",
-        "done": "return run_command([\"tail\", \"-n\", str(lines), \"sample_app/logs/app.log\"])",
+        "done": "return run_command([\"tail\", \"-n\", str(lines), \"inventory_service/logs/app.log\"])",
         "title": "tail as an agent tool",
         "note": "**Reads the end of the app log — the model picks the line count via the `lines` arg.**",
         "lines": 2
@@ -255,13 +255,13 @@
     ],
     "cli_tools/repo_tool.py": [
       {
-        "anchor": "# TODO: Lab 3 merge step — validate the pattern, walk sample_app/*.py,",
+        "anchor": "# TODO: Lab 3 merge step — validate the pattern, walk inventory_service/*.py,",
         "done": "re.compile(pattern)",
         "title": "Structured code search",
         "note": [
-          "**Walks sample_app/*.py and returns matches as JSON: file, line, text.**",
+          "**Walks inventory_service/*.py and returns matches as JSON: file, line, text.**",
           "- Validates the regex first — bad patterns get a clear error, not a crash",
-          "- `max_results` bounds output; `truncated` tells the model results were cut"
+          "- `max_results` caps how much comes back; `truncated` tells the model results were cut"
         ],
         "lines": 3
       },
@@ -281,8 +281,8 @@
         "done": "if not title or not body:",
         "title": "Ticket writer",
         "note": [
-          "**Appends a ticket to sample_app/tickets.json and returns its generated id.**",
-          "- Title/body lengths are capped — inputs from a model need bounds",
+          "**Appends a ticket to inventory_service/tickets.json and returns its generated id.**",
+          "- Title/body lengths are capped — input coming from a model needs limits",
           "- this tool has side effects; Lab 9 puts it behind human approval"
         ],
         "lines": 3
@@ -381,7 +381,7 @@
       {
         "anchor": "# TODO: Lab 8 merge step — enforce the guardrails: reject subcommands",
         "done": "args = args or []",
-        "title": "Guarded git escape hatch",
+        "title": "Guarded general-purpose git tool",
         "note": [
           "**Flexible git access with two hard rules enforced before running anything.**",
           "- Subcommand must be in ALLOWED_SUBCOMMANDS (read-only set)",
@@ -407,11 +407,11 @@
       {
         "anchor": "# TODO: Lab 10 merge step — implement the four check types described in",
         "done": "kind = check[\"type\"]",
-        "title": "Deterministic eval checks",
+        "title": "Fact-based eval checks",
         "note": [
           "**Four fact-based checks — no LLM judging, just observable outcomes.**",
           "- final_contains / final_not_empty inspect the answer; ticket_created inspects state",
-          "- max_tool_calls enforces an efficiency budget per scenario"
+          "- max_tool_calls enforces a step budget per scenario"
         ],
         "lines": 4
       }
@@ -501,7 +501,7 @@
         "lines": 1,
         "title": "Job 3: truncate",
         "note": [
-          "**Long output is cut at MAX_OUTPUT so one pytest run can't flood the context.**",
+          "**Long output is cut at MAX_OUTPUT so one pytest run can't fill the model's context.**",
           "- Arbitrary truncation is exactly what Lab 3 designs away"
         ]
       }
@@ -651,11 +651,11 @@
       {
         "anchor": "def recent_commits(count: int = 5) -> dict:",
         "lines": 1,
-        "title": "recent_commits: intent-sized",
+        "title": "recent_commits: a narrow, single-question tool",
         "note": [
           "**One question, no git flags exposed - the model can't misuse what it can't reach.**",
           "- Turns git log text into structured commit dicts",
-          "- Compare with git_readonly, the flexible-but-guarded escape hatch you merge in"
+          "- Compare with git_readonly, the flexible-but-guarded general-purpose tool you merge in"
         ]
       }
     ],
@@ -708,7 +708,7 @@
       {
         "anchor": "{ \"type\": \"final_contains\", \"value\": \"total_value\" },",
         "lines": 2,
-        "title": "...plus deterministic checks",
+        "title": "...plus checks that are plain code",
         "note": [
           "**Checks are facts, not opinions: the answer names the test, within a step budget.**",
           "- No LLM judging the LLM - every check is code you merge in step 2",

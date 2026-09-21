@@ -5,10 +5,12 @@ unstructured output. This program is a CLI designed *for an agent*:
 
   - clear inputs:       named arguments with types and defaults
   - predictable output: always a single JSON object on stdout
-  - bounded output:     results are limited and truncated deliberately
+  - capped output:      results are limited on purpose, so one noisy
+                        command can't fill the model's context
   - useful help:        --help text doubles as the tool description
-  - meaningful errors:  failures are JSON too, with a stable shape
-  - honest exit codes:  0 = success, 1 = operation failed, 2 = bad usage
+  - errors that explain themselves: failures are JSON too, same shape
+  - exit codes that tell the truth: 0 = success, 1 = the operation
+                        failed, 2 = the caller got the syntax wrong
 
 Try it yourself before giving it to the agent:
   python cli_tools/repo_tool.py search --pattern total_value
@@ -25,8 +27,8 @@ import subprocess
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LOG_FILE = os.path.join(REPO_ROOT, "sample_app", "logs", "app.log")
-TICKETS_FILE = os.path.join(REPO_ROOT, "sample_app", "tickets.json")
+LOG_FILE = os.path.join(REPO_ROOT, "inventory_service", "logs", "app.log")
+TICKETS_FILE = os.path.join(REPO_ROOT, "inventory_service", "tickets.json")
 
 
 # ---------------------------------------------------------------------------
@@ -35,7 +37,7 @@ TICKETS_FILE = os.path.join(REPO_ROOT, "sample_app", "tickets.json")
 
 def do_search(pattern, max_results=20):
     """Search the sample app source for a pattern. Returns structured matches."""
-    # TODO: Lab 3 merge step — validate the pattern, walk sample_app/*.py,
+    # TODO: Lab 3 merge step — validate the pattern, walk inventory_service/*.py,
     # collect structured matches (file, line, text), and bound the results.
     return {"ok": False, "error": "not implemented yet — merge in the completed code"}
 
@@ -43,7 +45,7 @@ def do_search(pattern, max_results=20):
 def do_tests():
     """Run the sample app's tests and return a structured summary."""
     result = subprocess.run(
-        [sys.executable, "-m", "pytest", "sample_app", "-q", "-rf", "--tb=no"],
+        [sys.executable, "-m", "pytest", "inventory_service", "-q", "-rf", "--tb=no"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,

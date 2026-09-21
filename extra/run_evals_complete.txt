@@ -1,8 +1,10 @@
 """Lab 10: A small evaluation harness for the safe agent.
 
-Agents are non-deterministic, so "it worked when I tried it" is not a
+The same agent can answer differently run to run, so "it worked when
+I tried it" is not a
 test strategy. This harness runs a set of scenarios through the safe
-agent and applies simple, deterministic checks to each run:
+agent and applies simple checks to each run — plain code, so the same
+result always gets the same verdict and no model grades another model:
 
   final_contains   the final answer mentions an expected string
   final_not_empty  the agent produced a final answer at all
@@ -26,7 +28,7 @@ sys.path.insert(0, REPO_ROOT)
 import safe_agent  # noqa: E402
 
 SCENARIOS_FILE = os.path.join(REPO_ROOT, "eval", "scenarios.json")
-TICKETS_FILE = os.path.join(REPO_ROOT, "sample_app", "tickets.json")
+TICKETS_FILE = os.path.join(REPO_ROOT, "inventory_service", "tickets.json")
 
 # The harness must run unattended, so approvals are automatic here.
 os.environ["SAFE_AGENT_AUTO_APPROVE"] = "yes"
@@ -54,7 +56,7 @@ def run_scenario(scenario):
 
 
 def run_check(check, final, tool_calls, tickets_added):
-    """Apply one deterministic check. Returns (passed, description)."""
+    """Apply one check. Plain code, no model involved. Returns (passed, description)."""
     kind = check["type"]
     if kind == "final_contains":
         expected = check["value"]

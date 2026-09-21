@@ -160,7 +160,7 @@ If you prefer to run locally instead of in a Codespace, you need:
 | `mcp_server/` | MCP servers: repo tools server, git wrapper server, test client |
 | `guardrails/` | Guardrail policy used by the safe agent in Lab 9 |
 | `eval/` | Evaluation harness and scenarios for Lab 10 |
-| `sample_app/` | The small application (with a bug!) that your agent investigates all day |
+| `inventory_service/` | The small application (with a bug!) that your agent investigates all day |
 | `extra/` | Completed versions of lab code used in the diff-merge steps |
 | `scripts/` | Setup scripts: Ollama install/start, `setup-key.sh` (Groq key), `check-groq.sh` |
 | `merge-info.json` | Hover notes and highlights for the Merge Info VS Code extension (installed on attach from `.devcontainer/`) |
@@ -177,10 +177,15 @@ If you prefer to run locally instead of in a Codespace, you need:
   `agents/llm.py`); if you still see this on the local model, re-run once or switch to Groq.
 - **Groq key not picked up in a new terminal**: run `source scripts/setup-key.sh` again — it
   writes the key to `~/.bashrc` so every new terminal has it. `echo $GROQ_API_KEY` to check.
+- **Ollama not responding** (`could not connect to ollama server`, `ollama list` fails):
+  `bash scripts/startOllama.sh`. It is safe to run at any time — it starts the server only if
+  it isn't already up, downloads the model if it is missing, and prints the reason from
+  `/tmp/ollama.log` if the server won't start. Every new terminal runs the same check
+  automatically, so opening a fresh terminal also fixes it.
 - **`address already in use` / stuck server**: `pkill ollama` then `bash scripts/startOllama.sh`
-- **Model not found**: `ollama pull llama3.2:3b`
+- **Model not found**: `bash scripts/startOllama.sh` downloads it; `ollama pull llama3.2:3b` also works.
 - **`ollama: command not found`** after setup: the Ollama installer needs `zstd`, which
-  `scripts/startup_ollama.sh` now installs first. Re-run `bash scripts/startup_ollama.sh`.
+  `scripts/startup_ollama.sh` installs first. `bash scripts/startOllama.sh` re-runs that setup for you.
 - **Groq `429` / rate-limit errors**: the free tier has a small per-minute output-token
   budget; the agents cap output and retry with backoff, so a run may pause for a bit.
   Running several agents back-to-back (Labs 7 and 10) is where you'll notice it.

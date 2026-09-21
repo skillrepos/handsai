@@ -71,10 +71,10 @@ def main():
     mcp_run = run_captured("mcp", lambda: asyncio.run(mcp_agent.run_agent(task)))
 
     print("\n=== Comparison ===")
-    print(f"{'surface':<10} {'tool calls':<12} {'wall time':<12} {'got answer?':<12}")
+    print(f"{'offered as':<12} {'tool calls':<12} {'wall time':<12} {'got answer?':<12}")
     for run in (cli_run, mcp_run):
         answered = "yes" if run["final"] else "no"
-        print(f"{run['label']:<10} {run['tool_calls']:<12} {run['seconds']:<12.1f} {answered:<12}")
+        print(f"{run['label']:<12} {run['tool_calls']:<12} {run['seconds']:<12.1f} {answered:<12}")
 
     print("\nTranscripts saved:")
     for run in (cli_run, mcp_run):

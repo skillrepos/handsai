@@ -1,6 +1,6 @@
 """Lab 5: The same capabilities, exposed as an MCP server.
 
-The Model Context Protocol gives tools a standard, discoverable surface:
+The Model Context Protocol gives tools a standard, discoverable way in:
 each tool has a name, a description (from the docstring), and a typed
 input schema (from the type hints) — all generated for us by MCPServer.
 
@@ -29,7 +29,7 @@ mcp = MCPServer("repo-tools")
 def search_code(pattern: str, max_results: int = 20) -> dict:
     """Search the sample app source code for a regex pattern.
 
-    Returns the match count and a bounded list of matches, each with
+    Returns the match count and a length-capped list of matches, each with
     file, line number, and the matching text.
     """
     return do_search(pattern, max_results)

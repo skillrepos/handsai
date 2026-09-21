@@ -1,16 +1,18 @@
 """Lab 8: Wrapping an existing CLI (git) behind an MCP server.
 
-Sometimes the capability you want already exists as a battle-tested CLI.
-Rather than reimplementing it, you can wrap it: the MCP server gives the
-agent a clean, discoverable, validated surface, and the CLI does the
-real work underneath.
+Sometimes the capability you want already exists as a proven
+command-line program. Rather than reimplementing it, you can wrap it:
+the MCP server gives the agent a clean, discoverable, checked way in,
+and the CLI does the real work underneath.
 
-Two styles are shown here:
+Two kinds of tool are shown here:
 
-  1. Intent-sized tools (recent_commits, file_history): each tool maps
-     to ONE question an agent might ask, with the git plumbing hidden.
-  2. A guarded escape hatch (git_readonly): flexible access to a few
-     read-only subcommands, with an allowlist and argument rules.
+  1. Narrow tools (recent_commits, file_history): each one answers ONE
+     question an agent might ask, and exposes no git options at all,
+     so there is nothing in them to misuse.
+  2. A guarded general-purpose tool (git_readonly): for the git command
+     nobody anticipated. It accepts only subcommands on the allowlist,
+     and it refuses every option flag.
 
 Run it with the test client:
   python mcp_server/try_server.py mcp_server/git_mcp.py
@@ -25,7 +27,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 mcp = MCPServer("git-tools")
 
-# Read-only subcommands the escape hatch may run — nothing that writes.
+# Read-only subcommands git_readonly may run — nothing that writes.
 ALLOWED_SUBCOMMANDS = {"log", "show", "status", "branch", "shortlog"}
 
 
@@ -77,7 +79,7 @@ def recent_commits(count: int = 5) -> dict:
 def file_history(path: str, count: int = 5) -> dict:
     """Return the most recent commits that changed a particular file.
 
-    The path must be repo-relative, for example 'sample_app/inventory.py'.
+    The path must be repo-relative, for example 'inventory_service/inventory.py'.
     """
     if path.startswith("-"):
         return {"ok": False, "error": "path may not start with '-'"}

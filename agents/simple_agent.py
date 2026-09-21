@@ -62,12 +62,12 @@ TOOLS = {
     "read_file": {
         "function": read_file,
         "description": "Read the first 2000 characters of a file in this repo.",
-        "args": {"path": "string, repo-relative path, e.g. 'sample_app/inventory.py'"},
+        "args": {"path": "string, repo-relative path, e.g. 'inventory_service/inventory.py'"},
     },
     "list_files": {
         "function": list_files,
         "description": "List the files in a directory in this repo.",
-        "args": {"directory": "string, repo-relative path, e.g. 'sample_app'"},
+        "args": {"directory": "string, repo-relative path, e.g. 'inventory_service'"},
     },
 }
 
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     import sys
 
     task = " ".join(sys.argv[1:]) or (
-        "The nightly report failed. Read sample_app/logs/app.log and find the "
+        "The nightly report failed. Read inventory_service/logs/app.log and find the "
         "first total_value mismatch. Use the calculator on the add_item lines "
         "above it (quantity times price, added up) to decide which figure is "
         "correct: the ledger's or the service's."
