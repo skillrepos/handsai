@@ -117,6 +117,7 @@ def build_system_prompt():
 
 def run_agent(task, max_steps=8):
     print(f"[backend: {which_backend()}]")
+    print(f"Task: {task}\n")
     messages = [
         {"role": "system", "content": build_system_prompt()},
         {"role": "user", "content": task},

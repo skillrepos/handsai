@@ -12,13 +12,17 @@ Groq notes (free tier, verified 09/2026):
   - qwen3.8 is a "thinking" model whose reasoning tokens count against the
     free tier's small output-tokens-per-minute limit, so chat() turns
     thinking off and caps max_tokens. Agent replies are short JSON anyway.
+  - The free tier also has a daily token budget (200K/day for this model
+    when checked). If it runs out mid-workshop, chat() falls back to the
+    local Ollama model automatically and says so on stderr.
 """
 
 import json
 import os
 import re
+import sys
 
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 
 GROQ_DEFAULT_MODEL = "qwen/qwen3.8-27b"
 OLLAMA_DEFAULT_MODEL = "llama3.2:3b"
@@ -29,13 +33,14 @@ def which_backend():
     return "groq" if os.environ.get("GROQ_API_KEY") else "ollama"
 
 
-def get_client_and_model():
-    """Return an OpenAI-compatible client plus the model name to use."""
-    if which_backend() == "groq":
+def get_client_and_model(backend=None):
+    """Return an OpenAI-compatible client plus the model name for a backend."""
+    backend = backend or which_backend()
+    if backend == "groq":
         client = OpenAI(
             base_url="https://api.groq.com/openai/v1",
             api_key=os.environ["GROQ_API_KEY"],
-            max_retries=5,  # free-tier rate limits: back off and retry
+            max_retries=5,  # free-tier per-minute limits: back off and retry
         )
         model = os.environ.get("GROQ_MODEL", GROQ_DEFAULT_MODEL)
     else:
@@ -47,18 +52,38 @@ def get_client_and_model():
     return client, model
 
 
+_groq_exhausted = False  # set once Groq reports its daily token budget is spent
+
+
 def chat(messages, temperature=0.0):
-    """Send a list of chat messages to the model and return its reply text."""
-    client, model = get_client_and_model()
+    """Send a list of chat messages to the model and return its reply text.
+
+    Groq's free tier has a per-day token budget as well as per-minute limits.
+    Per-minute limits are handled by the client's retries; if the daily budget
+    runs out, every later call in this process falls back to the local Ollama
+    model so a lab never dies mid-run.
+    """
+    global _groq_exhausted
+    backend = which_backend()
+    if backend == "groq" and _groq_exhausted:
+        backend = "ollama"
+    client, model = get_client_and_model(backend)
     kwargs = {
         "model": model,
         "messages": messages,
         "temperature": temperature,
         "max_tokens": 600,  # agent replies are short JSON; keeps within rate limits
     }
-    if which_backend() == "groq":
+    if backend == "groq":
         kwargs["reasoning_effort"] = "none"  # no hidden thinking tokens
-    response = client.chat.completions.create(**kwargs)
+    try:
+        response = client.chat.completions.create(**kwargs)
+    except RateLimitError as e:
+        if backend == "groq" and "per day" in str(e).lower():
+            _groq_exhausted = True
+            print("[groq: daily token budget used up - falling back to local Ollama]", file=sys.stderr)
+            return chat(messages, temperature)
+        raise
     return response.choices[0].message.content
 
 

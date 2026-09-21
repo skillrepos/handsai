@@ -70,7 +70,7 @@ async def guarded_call(session, schemas, tool_name, args):
     if needs_approval(tool_name):
         if not ask_human(tool_name, args):
             audit("rejected_by_human", tool=tool_name, args=args)
-            return "DENIED: the human operator rejected this call"
+            return "DENIED: the human operator rejected this call. Do not retry it; give your final answer without it."
         audit("approved_by_human", tool=tool_name, args=args)
     try:
         result = await session.call_tool(tool_name, args)
@@ -98,6 +98,7 @@ async def run_agent(task, server_script=DEFAULT_SERVER, max_steps=8):
             tool_names = {tool.name for tool in tools}
             schemas = {tool.name: tool.input_schema for tool in tools}
             print(f"[backend: {which_backend()}] [server: {server_script}]")
+            print(f"Task: {task}\n")
             print(f"[discovered tools: {', '.join(sorted(tool_names))}]")
             audit("session_start", task=task, tools=sorted(tool_names))
             messages = [

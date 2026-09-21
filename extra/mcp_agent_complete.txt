@@ -72,6 +72,7 @@ async def run_agent(task, server_script=DEFAULT_SERVER, max_steps=8):
             tools = (await session.list_tools()).tools
             tool_names = {tool.name for tool in tools}
             print(f"[backend: {which_backend()}] [server: {server_script}]")
+            print(f"Task: {task}\n")
             print(f"[discovered tools: {', '.join(sorted(tool_names))}]")
             messages = [
                 {"role": "system", "content": build_system_prompt(tools)},

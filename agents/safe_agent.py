@@ -86,6 +86,7 @@ async def run_agent(task, server_script=DEFAULT_SERVER, max_steps=8):
             tool_names = {tool.name for tool in tools}
             schemas = {tool.name: tool.input_schema for tool in tools}
             print(f"[backend: {which_backend()}] [server: {server_script}]")
+            print(f"Task: {task}\n")
             print(f"[discovered tools: {', '.join(sorted(tool_names))}]")
             audit("session_start", task=task, tools=sorted(tool_names))
             messages = [

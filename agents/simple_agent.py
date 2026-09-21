@@ -85,6 +85,7 @@ def build_system_prompt():
 
 def run_agent(task, max_steps=8):
     print(f"[backend: {which_backend()}]")
+    print(f"Task: {task}\n")
     messages = [
         {"role": "system", "content": build_system_prompt()},
         {"role": "user", "content": task},
@@ -104,6 +105,9 @@ if __name__ == "__main__":
     import sys
 
     task = " ".join(sys.argv[1:]) or (
-        "What files are in the sample_app directory, and what is 19.99 * 5?"
+        "The nightly report failed. Read sample_app/logs/app.log and find the "
+        "first total_value mismatch. Use the calculator on the add_item lines "
+        "above it (quantity times price, added up) to decide which figure is "
+        "correct: the ledger's or the service's."
     )
     run_agent(task)
