@@ -1,6 +1,6 @@
 # Hands of AI — Building AI Agents That Act: Tools via CLIs and MCP
 
-**Full-day hands-on workshop — Revision 1.10 — 09/21/26**
+**Full-day hands-on workshop — Revision 1.11 — 09/22/26**
 
 AI agents become useful when they can act. In this workshop you build a practical AI agent
 that uses tools through two different surfaces — two ways of offering a tool to an agent: command-line interfaces and the
@@ -41,7 +41,7 @@ Click here ➡️  [![Open in GitHub Codespaces](https://github.com/codespaces/b
 
 **3. Then click on the option to create a new codespace.**
 
-![Creating new codespace from button](./images/hoa-setup-create.png?raw=true "Creating new codespace from button")
+![Creating new codespace from button](./images/hoa-1.png?raw=true "Creating new codespace from button")
 
 This will run for several minutes while it gets everything ready.
 
@@ -122,17 +122,11 @@ To switch back to the local model at any time:
 source scripts/setup-key.sh --remove
 ```
 
-*Alternative:* store the key as a **Codespace secret** named `GROQ_API_KEY`
-(https://github.com/settings/codespaces) before creating the codespace; it is then set in
-every terminal automatically and step 5 isn't needed.
-
 *Daily budget:* Groq's free tier allows about **200,000 tokens per day** per key. A full run
 of all ten labs fits, but re-running the longer labs many times can use it up. If that happens
 you'll see `[groq: daily token budget used up - falling back to local Ollama]` and the agent
 simply continues on the local model — nothing to fix, it just gets slower until the budget
 resets the next day.
-
-![Groq daily budget exhausted, run continues on Ollama](./images/hoa-groq-fallback.png?raw=true "Groq daily budget exhausted, run continues on Ollama")
 
 <br><br>
 
