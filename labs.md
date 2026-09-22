@@ -1,7 +1,7 @@
 # Hands of AI
 ## Building AI Agents That Act: Tools via CLIs and MCP
 ## Full-day workshop labs
-## Revision 1.10 - 09/21/26
+## Revision 1.11 - 09/22/26
 
 **Startup: You need a running GitHub Codespace created from this repository (see README.md). Setup installs Python, Ollama, and the llama3.2:3b model automatically (3-5 minutes). Verify with:**
 
@@ -176,6 +176,10 @@ python agents/simple_agent.py "Read inventory_service/inventory.py and tell me w
 <br><br>
 
 9. **What just happened, and why it matters.** The model did the thinking: it chose the tools, wrote the arguments, interpreted a log file and a source file, and decided when it was done. Our code did the doing — and nothing else. That split is what makes it safe to hand an agent real power later, because everything it can *do* is a function we wrote. And notice what it knew: only the one-line descriptions in `TOOLS`. Tool descriptions are prompt engineering: the wording of those one-liners is the only lever you have over which tool the model reaches for, so treat them as code, not comments. You've found the bug (`total_value` adds instead of multiplies) with a file reader and a calculator. Next lab: real engineering tools, so it can prove the bug with the test suite.
+
+![The loop you just built](./diagrams/agent-loop.png?raw=true "The loop you just built")
+
+*The whole loop on one page, including the two exits the transcript doesn't show you: a reply that isn't valid JSON goes back for another try, and the step budget stops a model that won't stop on its own. Every lab after this one keeps this loop and changes only where the tools come from. The rest of the day's diagrams are in [`diagrams/`](./diagrams/README.md).*
 
 <p align="center">
 **[END OF LAB]**
@@ -551,6 +555,10 @@ code -d extra/mcp_agent_complete.txt agents/mcp_agent.py
 
 3. Before running, find these three things in the merged code (highlighted in blue): (a) the agent never imports the server — it only knows a script path; (b) the prompt is built from each tool's `description` and `input_schema`, straight from `list_tools`; (c) failures come back through the protocol's `is_error` flag as text the model can react to.
 
+![What happens over stdio](./diagrams/mcp-stdio-sequence.png?raw=true "What happens over stdio")
+
+*The whole exchange: the agent starts the server as a subprocess, asks what tools exist, builds its prompt from the reply, and only then runs the loop you wrote in Lab 1 — with `call_tool` where a Python function call used to be.*
+
 <br><br>
 
 4. Run it on the Lab 4 question:
@@ -761,6 +769,10 @@ code guardrails/policy.py
 <br><br>
 
 2. The key idea: none of this depends on the model behaving. The model can ask for anything; only calls that pass the policy execute. Guardrails live *outside* the model, in code you can test.
+
+![Every branch one tool call can take](./diagrams/guardrail-decision-path.png?raw=true "Every branch one tool call can take")
+
+*Every path a proposed call can take, and the line each one writes to the audit log. `guarded_call`, which you merge in next, is the middle of this picture.*
 
 <br><br>
 

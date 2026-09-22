@@ -1,0 +1,18 @@
+%%{init: {"theme": "base", "fontFamily": "Mulish, Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Mulish, Helvetica, Arial, sans-serif", "fontSize": "16px", "primaryColor": "#F2F7FD", "primaryTextColor": "#011936", "primaryBorderColor": "#C3D4E8", "lineColor": "#6E6E6E", "textColor": "#292929", "clusterBkg": "#FFFFFF", "clusterBorder": "#C3D4E8", "edgeLabelBackground": "#FFFFFF", "tertiaryColor": "#FFFFFF"}, "flowchart": {"wrappingWidth": 170}}}%%
+flowchart LR
+    S["eval/scenarios.json<br/>a task plus its checks"] --> R["Run every scenario<br/>approvals auto-answered"]
+    R --> A["safe_agent.run_agent"]
+    A --> O["Capture: final answer,<br/>number of tool calls,<br/>tickets before vs after"]
+    O --> C["Apply the checks - ordinary Python,<br/>no model grading another model:<br/>final_contains · final_not_empty<br/>ticket_created · max_tool_calls"]
+    C --> V["Pass / fail<br/>per scenario"]
+    V --> RR["Run it again - what matters<br/>is how OFTEN it passes"]
+    RR -.-> R
+
+    classDef dec fill:#FDF3E7,stroke:#A85410,stroke-width:1.5px,color:#011936
+    classDef good fill:#EAF3E6,stroke:#2F6620,stroke-width:1.5px,color:#1F4512
+    classDef stop fill:#F4F4F4,stroke:#6E6E6E,stroke-width:1.5px,color:#292929
+    classDef key fill:#E3EEFA,stroke:#0053C3,stroke-width:2px,color:#011936
+
+    class C key
+    class V good
+    class RR dec

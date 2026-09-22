@@ -1,0 +1,22 @@
+%%{init: {"theme": "base", "fontFamily": "Mulish, Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Mulish, Helvetica, Arial, sans-serif", "fontSize": "16px", "primaryColor": "#F2F7FD", "primaryTextColor": "#011936", "primaryBorderColor": "#C3D4E8", "lineColor": "#6E6E6E", "textColor": "#292929", "clusterBkg": "#FFFFFF", "clusterBorder": "#C3D4E8", "edgeLabelBackground": "#FFFFFF", "tertiaryColor": "#FFFFFF"}, "flowchart": {"wrappingWidth": 250}}}%%
+flowchart LR
+    A["Task"] --> B["messages:<br/>system prompt listing the tools<br/>+ the task"]
+    B --> C["REASON<br/>Ask the model what to do next"]
+    C -- "reply wasn't JSON - ask again" --> C
+    C --> D{"Which kind of<br/>JSON came back?"}
+    D -- "final" --> Z["Print the answer"]
+    D -- "tool + args" --> E["ACT<br/>Look the name up in TOOLS<br/>and run that function"]
+    E --> F["OBSERVE<br/>Append the action and its result<br/>to messages"]
+    F --> C
+    F --> G{"Step budget<br/>used up?"}
+    G -- yes --> Y["Give up"]
+
+    classDef dec fill:#FDF3E7,stroke:#A85410,stroke-width:1.5px,color:#011936
+    classDef good fill:#EAF3E6,stroke:#2F6620,stroke-width:1.5px,color:#1F4512
+    classDef stop fill:#F4F4F4,stroke:#6E6E6E,stroke-width:1.5px,color:#292929
+    classDef key fill:#E3EEFA,stroke:#0053C3,stroke-width:2px,color:#011936
+
+    class C,E,F key
+    class D,G dec
+    class Z good
+    class Y stop

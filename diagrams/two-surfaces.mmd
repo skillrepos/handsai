@@ -1,0 +1,23 @@
+%%{init: {"theme": "base", "fontFamily": "Mulish, Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Mulish, Helvetica, Arial, sans-serif", "fontSize": "16px", "primaryColor": "#F2F7FD", "primaryTextColor": "#011936", "primaryBorderColor": "#C3D4E8", "lineColor": "#6E6E6E", "textColor": "#292929", "clusterBkg": "#FFFFFF", "clusterBorder": "#C3D4E8", "edgeLabelBackground": "#FFFFFF", "tertiaryColor": "#FFFFFF"}, "flowchart": {"wrappingWidth": 340}}}%%
+flowchart TB
+    subgraph CLIBOX["CLI surface - Labs 3 and 4"]
+        A1["structured_agent.py<br/>tool list written into the prompt by hand"]
+        T1["cli_tools/repo_tool.py<br/>subcommands, one JSON object on stdout,<br/>exit codes 0 / 1 / 2"]
+        A1 -- "subprocess" --> T1
+    end
+    subgraph MCPBOX["MCP surface - Labs 5 and 6"]
+        A2["agents/mcp_agent.py<br/>tool list discovered at startup"]
+        T2["mcp_server/repo_mcp.py<br/>mcp.tool decorators, schemas from type hints"]
+        A2 -- "stdio" --> T2
+    end
+    T1 --> CAP["The same four capabilities:<br/>search code, run tests,<br/>summarize log, open ticket"]
+    T2 --> CAP
+    CAP --> L7["Lab 7: the same task down both paths,<br/>transcripts compared side by side"]
+
+    classDef dec fill:#FDF3E7,stroke:#A85410,stroke-width:1.5px,color:#011936
+    classDef good fill:#EAF3E6,stroke:#2F6620,stroke-width:1.5px,color:#1F4512
+    classDef stop fill:#F4F4F4,stroke:#6E6E6E,stroke-width:1.5px,color:#292929
+    classDef key fill:#E3EEFA,stroke:#0053C3,stroke-width:2px,color:#011936
+
+    class CAP key
+    class L7 good

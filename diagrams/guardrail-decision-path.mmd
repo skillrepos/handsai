@@ -1,0 +1,28 @@
+%%{init: {"theme": "base", "fontFamily": "Mulish, Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Mulish, Helvetica, Arial, sans-serif", "fontSize": "16px", "primaryColor": "#F2F7FD", "primaryTextColor": "#011936", "primaryBorderColor": "#C3D4E8", "lineColor": "#6E6E6E", "textColor": "#292929", "clusterBkg": "#FFFFFF", "clusterBorder": "#C3D4E8", "edgeLabelBackground": "#FFFFFF", "tertiaryColor": "#FFFFFF"}, "flowchart": {"wrappingWidth": 340}}}%%
+flowchart LR
+    A["Model proposes<br/>a tool call"] --> B{"On the<br/>allowlist?"}
+    B -- yes --> C{"Args valid?<br/>required present, no extras,<br/>strings under 500 chars"}
+    C -- yes --> D{"Side effect?<br/>in APPROVAL_REQUIRED"}
+    D -- no --> F["Execute<br/>through MCP"]
+    D -- yes --> E{"Human<br/>approves?"}
+    E -- yes --> F
+    B -- no --> X1["DENIED<br/>by policy"]
+    C -- no --> X1
+    E -- no --> X2["Rejected<br/>by human"]
+    F --> G["Observation goes<br/>back to the model"]
+    X1 --> G
+    X2 --> G
+    B -.-> AUD[("audit_log.jsonl<br/>one line per decision")]
+    C -.-> AUD
+    E -.-> AUD
+    F -.-> AUD
+
+    classDef dec fill:#FDF3E7,stroke:#A85410,stroke-width:1.5px,color:#011936
+    classDef good fill:#EAF3E6,stroke:#2F6620,stroke-width:1.5px,color:#1F4512
+    classDef stop fill:#F4F4F4,stroke:#6E6E6E,stroke-width:1.5px,color:#292929
+    classDef key fill:#E3EEFA,stroke:#0053C3,stroke-width:2px,color:#011936
+
+    class B,C,D,E dec
+    class F,G good
+    class X1,X2 stop
+    class AUD key

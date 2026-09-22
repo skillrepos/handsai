@@ -1,0 +1,13 @@
+%%{init: {"theme": "base", "fontFamily": "Mulish, Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Mulish, Helvetica, Arial, sans-serif", "fontSize": "16px", "primaryColor": "#F2F7FD", "primaryTextColor": "#011936", "primaryBorderColor": "#C3D4E8", "lineColor": "#6E6E6E", "textColor": "#292929", "clusterBkg": "#FFFFFF", "clusterBorder": "#C3D4E8", "edgeLabelBackground": "#FFFFFF", "tertiaryColor": "#FFFFFF"}, "flowchart": {"wrappingWidth": 220}}}%%
+flowchart TB
+    A1["the Lab 4 agent"] --> T1["repo_tool.py<br/>a CLI, called as<br/>a subprocess"]
+    A2["the Lab 6 agent"] --> T2["repo_mcp.py<br/>an MCP server,<br/>reached over stdio"]
+    T1 --> CAP["the same four capabilities:<br/>search code · run tests<br/>summarize log · open ticket"]
+    T2 --> CAP
+
+    classDef dec fill:#FDF3E7,stroke:#A85410,stroke-width:2px,color:#011936
+    classDef good fill:#EAF3E6,stroke:#2F6620,stroke-width:2px,color:#1F4512
+    classDef stop fill:#F4F4F4,stroke:#6E6E6E,stroke-width:2px,color:#292929
+    classDef key fill:#E3EEFA,stroke:#0053C3,stroke-width:2.5px,color:#011936
+
+    class CAP key

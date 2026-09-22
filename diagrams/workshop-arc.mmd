@@ -1,0 +1,20 @@
+%%{init: {"theme": "base", "fontFamily": "Mulish, Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Mulish, Helvetica, Arial, sans-serif", "fontSize": "16px", "primaryColor": "#F2F7FD", "primaryTextColor": "#011936", "primaryBorderColor": "#C3D4E8", "lineColor": "#6E6E6E", "textColor": "#292929", "clusterBkg": "#FFFFFF", "clusterBorder": "#C3D4E8", "edgeLabelBackground": "#FFFFFF", "tertiaryColor": "#FFFFFF"}, "flowchart": {"wrappingWidth": 340}}}%%
+flowchart LR
+    M["MORNING<br/>give it hands"] --> L1["Lab 1<br/>simple_agent.py<br/>the loop"]
+    L1 --> L2["Lab 2<br/>cli_agent.py<br/>raw CLIs"]
+    L2 --> L3["Lab 3<br/>repo_tool.py<br/>a CLI for an agent"]
+    L3 --> L4["Lab 4<br/>structured_agent.py<br/>agent meets that CLI"]
+    L4 --> L5["Lab 5<br/>repo_mcp.py<br/>same tools over MCP"]
+    P["AFTERNOON<br/>make it shareable<br/>and trustworthy"] --> L6["Lab 6<br/>mcp_agent.py<br/>tools discovered"]
+    L6 --> L7["Lab 7<br/>compare_agents.py<br/>CLI vs MCP"]
+    L7 --> L8["Lab 8<br/>git_mcp.py<br/>wrap a proven CLI"]
+    L8 --> L9["Lab 9<br/>safe_agent.py<br/>policy, approval, audit"]
+    L9 --> L10["Lab 10<br/>run_evals.py<br/>rates, not runs"]
+
+    classDef dec fill:#FDF3E7,stroke:#A85410,stroke-width:1.5px,color:#011936
+    classDef good fill:#EAF3E6,stroke:#2F6620,stroke-width:1.5px,color:#1F4512
+    classDef stop fill:#F4F4F4,stroke:#6E6E6E,stroke-width:1.5px,color:#292929
+    classDef key fill:#E3EEFA,stroke:#0053C3,stroke-width:2px,color:#011936
+
+    class M,P key
+    class L5,L10 good

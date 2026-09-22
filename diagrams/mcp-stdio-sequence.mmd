@@ -1,0 +1,23 @@
+%%{init: {"theme": "base", "fontFamily": "Mulish, Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Mulish, Helvetica, Arial, sans-serif", "fontSize": "16px", "primaryColor": "#F2F7FD", "primaryTextColor": "#011936", "primaryBorderColor": "#C3D4E8", "lineColor": "#6E6E6E", "textColor": "#292929", "clusterBkg": "#FFFFFF", "clusterBorder": "#C3D4E8", "edgeLabelBackground": "#FFFFFF", "tertiaryColor": "#FFFFFF", "actorBkg": "#F2F7FD", "actorBorder": "#0053C3", "actorTextColor": "#011936", "actorLineColor": "#C3D4E8", "signalColor": "#292929", "signalTextColor": "#292929", "noteBkgColor": "#FDF3E7", "noteBorderColor": "#A85410", "noteTextColor": "#292929", "labelBoxBkgColor": "#F2F7FD", "labelBoxBorderColor": "#0053C3", "labelTextColor": "#011936", "loopTextColor": "#011936", "sequenceNumberColor": "#FFFFFF"}}}%%
+sequenceDiagram
+    autonumber
+    actor You
+    participant Agent as mcp_agent.py
+    participant Model
+    participant Server as repo_mcp.py subprocess
+    You->>Agent: task
+    Agent->>Server: launch as a subprocess - no port, no URL
+    Agent->>Server: initialize
+    Server-->>Agent: ready
+    Agent->>Server: list_tools
+    Server-->>Agent: names, descriptions, JSON schemas
+    Note right of Agent: The prompt is built from what came<br/>back - no tool is hardcoded
+    loop until the model says it is done
+        Agent->>Model: conversation so far
+        Model-->>Agent: JSON action - a tool name and args
+        Agent->>Server: call_tool over stdio
+        Server-->>Agent: text content
+        Agent->>Model: observation
+    end
+    Model-->>Agent: JSON with a final key
+    Agent-->>You: answer

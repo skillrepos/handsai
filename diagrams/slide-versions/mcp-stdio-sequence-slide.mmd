@@ -1,0 +1,9 @@
+%%{init: {"theme": "base", "fontFamily": "Mulish, Helvetica, Arial, sans-serif", "themeVariables": {"fontFamily": "Mulish, Helvetica, Arial, sans-serif", "fontSize": "16px", "primaryColor": "#F2F7FD", "primaryTextColor": "#011936", "primaryBorderColor": "#C3D4E8", "lineColor": "#6E6E6E", "textColor": "#292929", "clusterBkg": "#FFFFFF", "clusterBorder": "#C3D4E8", "edgeLabelBackground": "#FFFFFF", "tertiaryColor": "#FFFFFF", "actorBkg": "#F2F7FD", "actorBorder": "#0053C3", "actorTextColor": "#011936", "actorLineColor": "#C3D4E8", "signalColor": "#292929", "signalTextColor": "#292929", "noteBkgColor": "#FDF3E7", "noteBorderColor": "#A85410", "noteTextColor": "#292929", "labelBoxBkgColor": "#F2F7FD", "labelBoxBorderColor": "#0053C3", "labelTextColor": "#011936", "loopTextColor": "#011936", "sequenceNumberColor": "#FFFFFF"}}}%%
+sequenceDiagram
+    participant A as the agent
+    participant S as the MCP server
+    A->>S: launch as a subprocess
+    A->>S: what tools do you have?
+    S-->>A: names, descriptions, schemas
+    A->>S: call one of them
+    S-->>A: result
