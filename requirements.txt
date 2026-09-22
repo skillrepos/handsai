@@ -8,5 +8,5 @@ openai>=1.30.0
 mcp>=2.0,<3
 
 # --- Testing ---
-# Used by the sample app's test suite and the Lab 8 evaluation harness
+# Used by the inventory service's test suite and the Lab 8 evaluation harness
 pytest>=8.0.0

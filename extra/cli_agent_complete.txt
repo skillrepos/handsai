@@ -49,12 +49,12 @@ def run_command(cmd):
 # ---------------------------------------------------------------------------
 
 def grep_code(pattern):
-    """Search the sample app's source for a pattern using grep."""
+    """Search the inventory service's source for a pattern using grep."""
     return run_command(["grep", "-rn", pattern, "inventory_service", "--include=*.py"])
 
 
 def run_tests():
-    """Run the sample app's test suite with pytest."""
+    """Run the inventory service's test suite with pytest."""
     return run_command(["python", "-m", "pytest", "inventory_service", "--tb=short", "-q"])
 
 
@@ -71,12 +71,12 @@ def tail_log(lines):
 TOOLS = {
     "grep_code": {
         "function": grep_code,
-        "description": "Search the sample app source code for a pattern (runs grep).",
+        "description": "Search the inventory service source code for a pattern (runs grep).",
         "args": {"pattern": "string, text or regex to search for"},
     },
     "run_tests": {
         "function": run_tests,
-        "description": "Run the sample app test suite (runs pytest).",
+        "description": "Run the inventory service test suite (runs pytest).",
         "args": {},
     },
     "git_history": {

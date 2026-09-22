@@ -36,7 +36,7 @@ TICKETS_FILE = os.path.join(REPO_ROOT, "inventory_service", "tickets.json")
 # ---------------------------------------------------------------------------
 
 def do_search(pattern, max_results=20):
-    """Search the sample app source for a pattern. Returns structured matches."""
+    """Search the inventory service source for a pattern. Returns structured matches."""
     try:
         re.compile(pattern)
     except re.error as e:
@@ -67,7 +67,7 @@ def do_search(pattern, max_results=20):
 
 
 def do_tests():
-    """Run the sample app's tests and return a structured summary."""
+    """Run the inventory service's tests and return a structured summary."""
     result = subprocess.run(
         [sys.executable, "-m", "pytest", "inventory_service", "-q", "-rf", "--tb=no"],
         cwd=REPO_ROOT,
@@ -146,11 +146,11 @@ def build_parser():
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p = sub.add_parser("search", help="Search sample app source code for a regex pattern.")
+    p = sub.add_parser("search", help="Search inventory service source code for a regex pattern.")
     p.add_argument("--pattern", required=True, help="text or regex to search for")
     p.add_argument("--max-results", type=int, default=20, help="limit matches returned")
 
-    sub.add_parser("tests", help="Run the sample app test suite and summarize results.")
+    sub.add_parser("tests", help="Run the inventory service test suite and summarize results.")
 
     p = sub.add_parser("log-summary", help="Summarize the application log by level.")
     p.add_argument("--level", default="ERROR", help="INFO, WARNING, or ERROR")

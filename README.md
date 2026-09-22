@@ -1,9 +1,9 @@
 # Hands of AI — Building AI Agents That Act: Tools via CLIs and MCP
 
-**Full-day hands-on workshop — Revision 1.6 — 09/21/26**
+**Full-day hands-on workshop — Revision 1.10 — 09/21/26**
 
 AI agents become useful when they can act. In this workshop you build a practical AI agent
-that uses tools through two different execution surfaces — command-line interfaces and the
+that uses tools through two different surfaces — two ways of offering a tool to an agent: command-line interfaces and the
 Model Context Protocol (MCP) — and learn when each one is the right engineering choice.
 
 Over ten short labs (10–12 minutes each) you will:

@@ -27,7 +27,7 @@ mcp = MCPServer("repo-tools")
 
 @mcp.tool()
 def search_code(pattern: str, max_results: int = 20) -> dict:
-    """Search the sample app source code for a regex pattern.
+    """Search the inventory service source code for a regex pattern.
 
     Returns the match count and a length-capped list of matches, each with
     file, line number, and the matching text.

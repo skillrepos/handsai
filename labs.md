@@ -1,7 +1,7 @@
 # Hands of AI
 ## Building AI Agents That Act: Tools via CLIs and MCP
 ## Full-day workshop labs
-## Revision 1.9 - 09/21/26
+## Revision 1.10 - 09/21/26
 
 **Startup: You need a running GitHub Codespace created from this repository (see README.md). Setup installs Python, Ollama, and the llama3.2:3b model automatically (3-5 minutes). Verify with:**
 

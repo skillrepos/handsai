@@ -55,7 +55,7 @@ def open_ticket(title, body):
 TOOLS = {
     "search_code": {
         "function": search_code,
-        "description": "Search the sample app source code. Returns JSON matches with file and line.",
+        "description": "Search the inventory service source code. Returns JSON matches with file and line.",
         "args": {"pattern": "string, text or regex to search for"},
     },
     "run_tests": {
