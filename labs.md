@@ -1,7 +1,7 @@
 # Hands of AI
 ## Building AI Agents That Act: Tools via CLIs and MCP
 ## Workshop labs
-## Revision 1.13 - 09/23/26
+## Revision 1.14 - 09/23/26
 
 **Startup: You need a running GitHub Codespace created from this repository (see README.md). Setup installs Python, Ollama, and the llama3.2:3b model automatically (3-5 minutes). Verify with:**
 
@@ -265,26 +265,40 @@ echo $?
 
 <br><br>
 
-5. Find the bug with the tool:
+5. Use the tool to track down the bug, the same way the agent will. Step 3 reported `test_total_value` as the failing test, so search for the function it tests, then for the line inside it that builds the total:
 
 ```
-python cli_tools/repo_tool.py search --pattern "BUG"
+python cli_tools/repo_tool.py search --pattern "total_value"
+python cli_tools/repo_tool.py search --pattern "total \+="
 ```
 
-![search finds the bug comment](./images/hoa3-7.png?raw=true "search finds the bug comment")
+> **Expected output:** The first search finds `def total_value` in `inventory.py` and the failing test in `test_inventory.py`. The second finds the one line that adds to the total: `total += item["price"] + item["quantity"]`. The docstring of `total_value` says the total is price *times* quantity, so the `+` between them is the bug. Each search returns exact files and line numbers, so one result tells you what to look for next. The agent works the same way in Labs 4 and 6.
+
+![search narrows down to the buggy line](./images/hoa3-7.png?raw=true "search narrows down to the buggy line")
 
 <br><br>
 
-6. Open a ticket and confirm it was saved:
+6. Open a ticket:
 
 ```
 python cli_tools/repo_tool.py ticket --title "Manual test" --body "Opened by hand in Lab 3"
-cat inventory_service/tickets.json
 ```
+
+> **Expected output:** `"ok": true` and the new ticket, including the id the tool assigned (`TICKET-0001` if this is your first ticket). This is the tool's *reply*, the part the agent will read.
 
 <br><br>
 
-7. **What just happened.** The capabilities are the same as Lab 2; the design changed for the reader. JSON output, a size cap, errors that explain themselves, exit codes that tell the truth: this checklist is the main thing to take from the workshop, and Lab 5 shows it applies to MCP tools unchanged.
+7. Confirm the ticket was saved to the ticket store:
+
+```
+cat inventory_service/tickets.json
+```
+
+> **Expected output:** a JSON list holding the same ticket. You are seeing it a second time on purpose: step 6 showed what the tool *said* it did, and this shows what it actually wrote. Only one ticket was created. If you run step 6 again, you'll get `TICKET-0002` and the list will have two entries.
+
+<br><br>
+
+8. **What just happened.** The capabilities are the same as Lab 2; the design changed for the reader. JSON output, a size cap, errors that explain themselves, exit codes that tell the truth: this checklist is the main thing to take from the workshop, and Lab 5 shows it applies to MCP tools unchanged.
 
 <p align="center">
 **[END OF LAB]**
@@ -477,7 +491,7 @@ python agents/mcp_agent.py "Check the log for errors, run the tests, search the 
 
 <br><br>
 
-5. Check the answer against what you know: the log's mismatch, the failing `test_total_value`, and the `BUG` line in `inventory.py` where price and quantity are added.
+5. Check the answer against what you know: the log's mismatch, the failing `test_total_value`, and the line in `total_value` (`inventory.py`) where price and quantity are added instead of multiplied.
 
 <br><br>
 
@@ -541,7 +555,7 @@ python cli_tools/repo_tool.py log-summary --level DEBUG
 6. Make the same kind of mistake through MCP (a wrong *type*) and see where it's caught:
 
 ```
-python agents/mcp_agent.py "Call search_code with pattern BUG and max_results set to the string 'ten' exactly as written - do not convert it to a number. Then tell me exactly what came back."
+python agents/mcp_agent.py "Call search_code with pattern total_value and max_results set to the string 'ten' exactly as written - do not convert it to a number. Then tell me exactly what came back."
 ```
 
 > **Expected output:** a `TOOL ERROR` saying `max_results` must be a valid integer. The schema rejected the call before your Python ran; in step 5 your own code had to catch the bad value. The local model may then retry with `10`, which succeeds.

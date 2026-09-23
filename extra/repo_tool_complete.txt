@@ -132,6 +132,7 @@ def do_ticket(title, body):
     tickets.append(ticket)
     with open(TICKETS_FILE, "w") as f:
         json.dump(tickets, f, indent=2)
+        f.write("\n")
     return {"ok": True, "ticket": ticket}
 
 

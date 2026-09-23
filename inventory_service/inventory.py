@@ -42,6 +42,5 @@ class Inventory:
         """Return the total value of all stock: sum of price x quantity."""
         total = 0
         for item in self._items.values():
-            # BUG: this should multiply price by quantity
             total += item["price"] + item["quantity"]
         return total
