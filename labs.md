@@ -19,7 +19,7 @@ python --version
 - **Run all commands from the repository root.**
 - **A local model call takes 5-10 seconds, so an agent run takes 30-90 seconds. For ~1-second responses, use a free Groq API key (README.md Setup steps 4-5): `source scripts/setup-key.sh`. Every lab then uses it automatically; `source scripts/setup-key.sh --remove` switches back. The local model often takes extra or wrong steps before it gets to the answer; that is expected.**
 - **Some steps are supposed to fail (a failing test, an error, a refusal). Each of those has an `Expected output` note. Any other step should run clean.**
-- **Terms are listed in [Appendix A](#appendix-a---terms); the repo layout is in [Appendix B](#appendix-b---whats-in-this-repo).**
+- **Terms are listed in [Appendix A](#appendix-a); the repo layout is in [Appendix B](#appendix-b).**
 </br></br>
 
 **Assembling Code**
@@ -39,19 +39,20 @@ You are building an **on-call engineer's assistant** for a small inventory servi
 
 | # | Lab | What the assistant gains |
 |---|-----|-------|
-| 1 | The Agent Loop | reads the log and checks the math |
-| 2 | Tools from the Command Line | runs pytest and finds the failing test |
-| 3 | Designing an Agent-Friendly CLI | a CLI built for an agent to read (no LLM in this lab) |
-| 4 | The Agent Uses the Designed CLI | uses that CLI, and opens its first ticket |
-| 5 | A First MCP Server | the same tools published over MCP (no LLM in this lab) |
-| 6 | The MCP-Powered Agent | finds its tools at startup instead of having them written in |
-| 7 | CLI vs MCP: Head-to-Head | the two measured on the same task |
-| 8 | Wrapping Git Behind MCP | git access with safety rules |
-| 9 | Guardrails: Policy, Approval, Audit | an allowlist, human approval, an audit log |
-| 10 | Evaluating the Agent | repeatable pass/fail checks |
+| 1 | [The Agent Loop](#lab1) | reads the log and checks the math |
+| 2 | [Tools from the Command Line](#lab2) | runs pytest and finds the failing test |
+| 3 | [Designing an Agent-Friendly CLI](#lab3) | a CLI built for an agent to read (no LLM in this lab) |
+| 4 | [The Agent Uses the Designed CLI](#lab4) | uses that CLI, and opens its first ticket |
+| 5 | [A First MCP Server](#lab5) | the same tools published over MCP (no LLM in this lab) |
+| 6 | [The MCP-Powered Agent](#lab6) | finds its tools at startup instead of having them written in |
+| 7 | [CLI vs MCP: Head-to-Head](#lab7) | the two measured on the same task |
+| 8 | [Wrapping Git Behind MCP](#lab8) | git access with safety rules |
+| 9 | [Guardrails: Policy, Approval, Audit](#lab9) | an allowlist, human approval, an audit log |
+| 10 | [Evaluating the Agent](#lab10) | repeatable pass/fail checks |
 
 </br></br>
 
+<a id="lab1"></a>
 ## Lab 1 - The Agent Loop (~11 minutes)
 
 **Purpose: Build the loop at the center of every agent — the model picks a tool, our code runs it, the result goes back to the model — and use it to answer the first on-call question.**
@@ -131,6 +132,7 @@ The `observation:` stops at `class InventoryError(Exception):`. That is the 200-
 
 </br></br>
 
+<a id="lab2"></a>
 ## Lab 2 - Tools from the Command Line (~9 minutes)
 
 **Purpose: Give the agent tools engineers already use — pytest, grep, git, tail — unchanged, and see what raw terminal output costs the model.**
@@ -202,6 +204,7 @@ python agents/cli_agent.py "Show the last 10 lines of the application log and te
 
 </br></br>
 
+<a id="lab3"></a>
 ## Lab 3 - Designing an Agent-Friendly CLI (~8 minutes)
 
 **Purpose: Build a CLI designed for an agent — JSON answers, capped output, clear error messages, meaningful exit codes — and test it by hand. No LLM in this lab.**
@@ -289,6 +292,7 @@ cat inventory_service/tickets.json
 
 </br></br>
 
+<a id="lab4"></a>
 ## Lab 4 - The Agent Uses the Designed CLI (~8 minutes)
 
 **Purpose: Repeat Lab 2's run with the Lab 3 CLI — same model, same loop, same question — and compare. Then have the agent open a ticket.**
@@ -348,6 +352,7 @@ cat inventory_service/tickets.json
 
 </br></br>
 
+<a id="lab5"></a>
 ## Lab 5 - A First MCP Server (~7 minutes)
 
 **Purpose: Publish the same four capabilities as an MCP server, so any MCP client can discover and call them. No LLM in this lab.**
@@ -422,6 +427,7 @@ python mcp_server/try_server.py mcp_server/git_mcp.py
 
 </br></br>
 
+<a id="lab6"></a>
 ## Lab 6 - The MCP-Powered Agent (~8 minutes)
 
 **Purpose: Make the agent an MCP client that discovers its tools at startup, with nothing hardcoded, and run the full investigation through MCP.**
@@ -483,6 +489,7 @@ python agents/mcp_agent.py "Check the log for errors, run the tests, search the 
 
 </br></br>
 
+<a id="lab7"></a>
 ## Lab 7 - CLI vs MCP: Head-to-Head (~8 minutes)
 
 **Purpose: Run one task through the Lab 4 agent (CLI tools) and the Lab 6 agent (MCP tools), then compare the transcripts, the numbers and the error handling.**
@@ -554,6 +561,7 @@ python agents/mcp_agent.py "Call search_code with pattern BUG and max_results se
 
 </br></br>
 
+<a id="lab8"></a>
 ## Lab 8 - Wrapping Git Behind MCP (~10 minutes)
 
 **Purpose: Put git behind an MCP server with two kinds of tool: narrow ones that each answer one question, and one general tool restricted by rules.**
@@ -627,6 +635,7 @@ python agents/mcp_agent.py --server mcp_server/git_mcp.py "Use git_readonly to r
 
 </br></br>
 
+<a id="lab9"></a>
 ## Lab 9 - Guardrails: Policy, Approval, Audit (~10 minutes)
 
 **Purpose: Put every tool call through a policy check — an allowlist, argument validation, human approval for anything that changes something, and a log of each decision — all in code, outside the model.**
@@ -711,6 +720,7 @@ grep rejected_by_human audit_log.jsonl
 
 </br></br>
 
+<a id="lab10"></a>
 ## Lab 10 - Evaluating the Agent (~11 minutes)
 
 **Purpose: Measure the agent instead of trusting one demo. Each scenario's checks are plain code, so the same run always gets the same verdict. This lab makes several agent runs; Groq is strongly recommended.**
@@ -780,6 +790,7 @@ python eval/run_evals.py
 
 </br></br>
 
+<a id="appendix-a"></a>
 ## Appendix A - Terms
 
 The deck defines these where they come up; this is the one place to look them all up.
@@ -804,6 +815,7 @@ The deck defines these where they come up; this is the one place to look them al
 
 </br></br>
 
+<a id="appendix-b"></a>
 ## Appendix B - What's in this repo
 
 | Folder | Contents |
