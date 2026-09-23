@@ -174,8 +174,8 @@ sequenceDiagram
     participant Server as repo_mcp.py subprocess
     You->>Agent: task
     Agent->>Server: launch as a subprocess - no port, no URL
-    Agent->>Server: initialize
-    Server-->>Agent: ready
+    Agent->>Server: server/discover (MCP 2026-07-28: no handshake, no session)
+    Server-->>Agent: supported protocol versions
     Agent->>Server: list_tools
     Server-->>Agent: names, descriptions, JSON schemas
     Note right of Agent: The prompt is built from what came<br/>back - no tool is hardcoded

@@ -68,7 +68,7 @@ async def run_agent(task, server_script=DEFAULT_SERVER, max_steps=8):
     )
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as session:
-            await session.initialize()
+            await session.discover()  # 2026-07-28: no handshake, no session
             tools = (await session.list_tools()).tools
             tool_names = {tool.name for tool in tools}
             print(f"[backend: {which_backend()}] [server: {server_script}]")

@@ -550,11 +550,12 @@
         ]
       },
       {
-        "anchor": "await session.initialize()",
-        "lines": 1,
-        "title": "2. Handshake",
+        "anchor": "await session.discover()",
+        "lines": 2,
+        "title": "2. Discover the server",
         "note": [
-          "**initialize() is the protocol handshake - versions and capabilities are exchanged.**"
+          "**discover() asks the server which protocol versions it supports and picks 2026-07-28.**",
+          "- No handshake and no session: from here on, every request carries the protocol version and client details in its own `_meta` field"
         ]
       },
       {

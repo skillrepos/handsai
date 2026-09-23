@@ -1,6 +1,7 @@
 """Lab 5 helper: a tiny MCP client for poking at a server by hand.
 
 This launches an MCP server as a subprocess, connects to it over stdio,
+asks which protocol versions the server supports (server/discover),
 lists the tools it advertises (with their auto-generated schemas), and
 calls one tool so you can watch a call go out and the result come back.
 
@@ -28,7 +29,8 @@ async def main(server_script):
     )
     async with stdio_client(params) as (read, write):
         async with ClientSession(read, write) as session:
-            await session.initialize()
+            await session.discover()
+            print(f"Protocol version: {session.protocol_version} (stateless: no handshake, no session)\n")
 
             print(f"=== Tools advertised by {server_script} ===\n")
             tools = await session.list_tools()

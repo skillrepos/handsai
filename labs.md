@@ -407,7 +407,7 @@ code -d extra/repo_mcp_complete.txt mcp_server/repo_mcp.py
 
 <br><br>
 
-3. Open the test client. The server communicates over stdio, so it does nothing until a client starts it. The client's four stages are in blue: start the server as a subprocess, `initialize`, `list_tools`, `call_tool`.
+3. Open the test client. The server communicates over stdio, so it does nothing until a client starts it. The client's four stages are in blue: start the server as a subprocess, `discover` (ask which versions of MCP the server supports), `list_tools`, `call_tool`.
 
 ```
 code mcp_server/try_server.py
@@ -431,6 +431,7 @@ python mcp_server/try_server.py
 
 | Look at | What it tells you |
 |---|---|
+| **`Protocol version: 2026-07-28`** | Client and server agreed on the 2026-07-28 version of MCP. There was no opening handshake and no session: every later request carries the version and the client's details with it, so any running copy of a server can answer any request. |
 | **The four `*` entries** (`search_code`, `run_tests`, `summarize_log`, `open_ticket`) | The server reported its own tools. The client had no list of them in advance. |
 | **`description:`** under each tool | The first line of that function's docstring. The model reads the full docstring to decide when to use the tool. |
 | **`input schema:`** under `open_ticket` | A description of the arguments the tool accepts, built from the Python line `def open_ticket(title: str, body: str)`. `"type": "string"` comes from `str`. `"required": ["title", "body"]` is there because neither argument has a default value. You didn't write any of it. |
@@ -526,13 +527,13 @@ python agents/mcp_agent.py "Check the log for errors, run the tests, search the 
 </br></br>
 
 <a id="lab7"></a>
-## Lab 7 - CLI vs MCP: Head-to-Head (~8 minutes)
+## Lab 7 - CLI vs MCP: Head-to-Head (~11 minutes)
 
-**Purpose: Run one task through the Lab 4 agent (reaches `repo_tool.py` as a command) and the Lab 6 agent (reaches it through MCP), then compare the transcripts, the numbers and the error handling.**
+**Purpose: Run one task through the Lab 4 agent (reaches `repo_tool.py` as a command) and the Lab 6 agent (reaches it through MCP), then compare the transcripts, the token cost and the error handling.**
 
 **The situation:** The agent now has two ways to reach the same `repo_tool.py` code: as a command (Lab 4) and through MCP (Lab 6). Which should a team standardize on? That depends on what you measure.
 
-1. Open the comparison script (complete, no merge). The blue highlights show its three jobs: run both agents on one task, count tool calls and time, save both transcripts to `transcripts/` (scroll down to line 44 to see them).
+1. Open the comparison script (complete, no merge). The blue highlights show its three jobs: run both agents on one task, count tool calls, tokens and time, save both transcripts to `transcripts/` (scroll down to see them). A **token** is the unit a model reads and bills by: roughly four characters of English text.
 
 ```
 code agents/compare_agents.py
@@ -564,9 +565,40 @@ code transcripts/cli_transcript.md transcripts/mcp_transcript.md
 
 4. Compare: Did both agents call the same tools in the same order? Which observations are easier to read? Did both reach the same root cause? In the table, time mostly follows the number of steps. If the step counts match but the times don't, the usual cause is Groq rate limiting or Ollama loading the model on the first run.
 
+| Column | What it counts |
+|---|---|
+| **tool calls** | Tools the agent ran. |
+| **model calls** | Times the agent asked the model for its next action: one per tool call, plus the final answer and any retries. |
+| **prompt tokens** | Everything sent to the model, added up over every model call. The whole conversation, including the tool list, is sent again on every call, so this grows faster than the step count. The numbers come from the model API. |
+
 <br><br>
 
-5. Now error handling. On the command line, the tool's own code has to catch a bad value:
+5. For the same number of steps, the MCP agent usually sends more prompt tokens. To see why, measure the part that is sent on every call before any work happens, the system prompt with its tool list. This script builds the prompt three ways without calling a model:
+
+```
+python agents/measure_prompt.py
+```
+
+| Row | What it shows |
+|---|---|
+| **bare shell (run_command)** | An agent with one tool that runs any command line. The model already knows `git`, `grep` and `pytest` from its training, so one short description is enough. This is the cheapest option, and the riskiest: that one tool can run anything. |
+| **Lab 4 CLI agent** | Four tools, each described in one line that you wrote. |
+| **Lab 6 MCP agent** | The same four tools, each with the full input schema the server published. More detail for the model to check its arguments against, and more tokens. |
+| **x 8 calls** | The same prompt sent on every call of an 8-step run. |
+
+<br><br>
+
+6. Now connect the MCP agent's prompt to both servers, as an agent that uses the repo tools and the git tools together would be:
+
+```
+python agents/measure_prompt.py mcp_server/repo_mcp.py mcp_server/git_mcp.py
+```
+
+> **Expected output:** 7 tools, and the MCP prompt about two-thirds larger than with one server. Every server you connect adds its whole tool list to every model call, whether or not the task uses those tools. With dozens of servers this becomes tens of thousands of tokens per call, which is why MCP clients now load tool descriptions only when needed (covered on the slides).
+
+<br><br>
+
+7. Now error handling. On the command line, the tool's own code has to catch a bad value:
 
 ```
 python cli_tools/repo_tool.py log-summary --level DEBUG
@@ -574,19 +606,19 @@ python cli_tools/repo_tool.py log-summary --level DEBUG
 
 <br><br>
 
-6. Make the same kind of mistake through MCP (a wrong *type*) and see where it's caught:
+8. Make the same kind of mistake through MCP (a wrong *type*) and see where it's caught:
 
 ```
 python agents/mcp_agent.py "Call search_code with pattern total_value and max_results set to the string 'ten' exactly as written - do not convert it to a number. Then tell me exactly what came back."
 ```
 
-> **Expected output:** a `TOOL ERROR` saying `max_results` must be a valid integer. The schema rejected the call before your Python ran; in step 5 your own code had to catch the bad value. The local model may then retry with `10`, which succeeds.
+> **Expected output:** a `TOOL ERROR` saying `max_results` must be a valid integer. The schema rejected the call before your Python ran; in step 7 your own code had to catch the bad value. The local model may then retry with `10`, which succeeds.
 
 ![Schema validation rejects the call](./images/hoa7-7.png?raw=true "Schema validation rejects the call")
 
 <br><br>
 
-7. **What just happened.** The model behaved almost the same with both, because the tools were designed the same way. The differences are in what surrounds the tool:
+9. **What just happened.** The model behaved almost the same with both, because the tools were designed the same way. The differences are in what surrounds the tool: MCP's schemas cost tokens on every call but catch bad arguments before your code runs, and the cost grows with every server you connect. When to pick each:
 - **CLI:** the tool already exists, you're prototyping, or it's one agent on one machine.
 - **MCP:** many clients share the tools, schemas and discovery matter, or tools change independently.
 - **CLI wrapped in MCP:** the CLI is proven, but you want structure and safety on top (Lab 8).
@@ -847,6 +879,8 @@ The deck defines these where they come up; this is the one place to look them al
 | **allowlist** | A list of what is permitted; everything else is refused. The opposite, a blocklist, tries to name everything forbidden and can never be complete. |
 | **audit log** | A file with one line per decision the agent made: what it asked for, what the policy said, what a human answered. |
 | **eval** | A test for an agent: a task plus checks written as ordinary code, run repeatedly to learn how *often* the agent succeeds. |
+| **token** | The unit a model reads, and the unit model use is measured and billed in: roughly four characters of English. Lab 7 counts them. |
+| **system prompt** | The instructions at the start of every model call: the agent's role, its tool list and the reply format. It is sent again on every call. |
 | **harness** | A script that runs something repeatedly and collects the results, such as the comparison script in Lab 7 and the eval runner in Lab 10. |
 
 </br></br>
@@ -857,7 +891,7 @@ The deck defines these where they come up; this is the one place to look them al
 | Folder | Contents |
 |---|---|
 | `inventory_service/` | The application you are on call for, and the only part you don't build: `inventory.py` (the service, with the bug), `test_inventory.py` (its tests), `logs/app.log` (its log), `tickets.json` (its ticket store). |
-| `agents/` | The agents (Labs 1, 2, 4, 6, 9) and the Lab 7 comparison script. `llm.py` is the shared model connection. |
+| `agents/` | The agents (Labs 1, 2, 4, 6, 9) and the Lab 7 comparison and prompt-measuring scripts. `llm.py` is the shared model connection. |
 | `cli_tools/` | `repo_tool.py`, the CLI you build in Lab 3. It supplies the agent's tools in every later lab except Lab 8: as a command in Lab 4, and through `mcp_server/repo_mcp.py` in Labs 5-7, 9 and 10. |
 | `mcp_server/` | The MCP servers: `repo_mcp.py` (Lab 5, publishes `repo_tool.py`'s functions) and `git_mcp.py` (Lab 8), plus the test client. |
 | `guardrails/` | The Lab 9 policy. |

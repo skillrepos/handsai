@@ -54,6 +54,33 @@ def get_client_and_model(backend=None):
 
 _groq_exhausted = False  # set once Groq reports its daily token budget is spent
 
+# Token counts for this process, as reported by the model API. Lab 7 reads
+# these to compare what the CLI and MCP agents cost per run.
+USAGE = {"model_calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "estimated": False}
+
+
+def reset_usage():
+    """Zero the token counters (call before a run you want to measure)."""
+    USAGE.update(model_calls=0, prompt_tokens=0, completion_tokens=0, estimated=False)
+
+
+def _record_usage(response, messages, reply):
+    """Add one model call's token counts to USAGE.
+
+    Groq and Ollama both report usage on their OpenAI-compatible endpoints.
+    If a backend leaves it out, fall back to about 4 characters per token
+    and mark the totals as estimated.
+    """
+    USAGE["model_calls"] += 1
+    usage = getattr(response, "usage", None)
+    if usage is not None and getattr(usage, "prompt_tokens", None) is not None:
+        USAGE["prompt_tokens"] += usage.prompt_tokens
+        USAGE["completion_tokens"] += usage.completion_tokens or 0
+    else:
+        USAGE["prompt_tokens"] += sum(len(m["content"]) for m in messages) // 4
+        USAGE["completion_tokens"] += len(reply or "") // 4
+        USAGE["estimated"] = True
+
 
 def chat(messages, temperature=0.0):
     """Send a list of chat messages to the model and return its reply text.
@@ -84,7 +111,9 @@ def chat(messages, temperature=0.0):
             print("[groq: daily token budget used up - falling back to local Ollama]", file=sys.stderr)
             return chat(messages, temperature)
         raise
-    return response.choices[0].message.content
+    reply = response.choices[0].message.content
+    _record_usage(response, messages, reply)
+    return reply
 
 
 def observation_message(observation, steps_left):
