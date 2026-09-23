@@ -1,7 +1,7 @@
 # Hands of AI
 ## Building AI Agents That Act: Tools via CLIs and MCP
 ## Workshop labs
-## Revision 1.14 - 09/23/26
+## Revision 1.16 - 09/23/26
 
 **Startup: You need a running GitHub Codespace created from this repository (see README.md). Setup installs Python, Ollama, and the llama3.2:3b model automatically (3-5 minutes). Verify with:**
 
@@ -209,7 +209,17 @@ python agents/cli_agent.py "Show the last 10 lines of the application log and te
 
 **Purpose: Build a CLI designed for an agent — JSON answers, capped output, clear error messages, meaningful exit codes — and test it by hand. No LLM in this lab.**
 
-**The situation:** The investigation keeps needing four things: search the code, run the tests, summarize the log, open a ticket. We put them in one program, `repo_tool.py`, with a subcommand for each, and design every response for a model to read. Labs 4-7, 9 and 10 all use this code.
+**The situation:** The investigation keeps needing four things: search the code, run the tests, summarize the log, open a ticket. We put them in one program, `repo_tool.py`, with a subcommand for each, and design every response for a model to read.
+
+**`repo_tool.py` supplies the agent's tools for the rest of the workshop.** You build it once, here, and never rewrite it. Later labs change only *how the agent reaches it*:
+
+| Lab | How the agent reaches `repo_tool.py` |
+|---|---|
+| 4 | Runs it as a command and reads its JSON reply. |
+| 5 | A new MCP server, `mcp_server/repo_mcp.py`, imports its four functions and publishes them over MCP. `repo_tool.py` itself doesn't change. |
+| 6, 9, 10 | Through that MCP server. |
+| 7 | Both ways, side by side. |
+| 8 | Not used: Lab 8 adds a separate git server. |
 
 1. Open the skeleton. The docstring at the top (blue) is the design checklist. `do_tests` (blue) is finished: it runs the same pytest as Lab 2 but returns a small dict of passed and failed counts plus failure names. The three TODOs follow the same pattern.
 
@@ -298,7 +308,7 @@ cat inventory_service/tickets.json
 
 <br><br>
 
-8. **What just happened.** The capabilities are the same as Lab 2; the design changed for the reader. JSON output, a size cap, errors that explain themselves, exit codes that tell the truth: this checklist is the main thing to take from the workshop, and Lab 5 shows it applies to MCP tools unchanged.
+8. **What just happened.** The capabilities are the same as Lab 2; the design changed for the reader. JSON output, a size cap, errors that explain themselves, exit codes that tell the truth: this checklist is the main thing to take from the workshop. In Lab 4 the agent runs `repo_tool.py` in place of Lab 2's raw programs.
 
 <p align="center">
 **[END OF LAB]**
@@ -309,7 +319,7 @@ cat inventory_service/tickets.json
 <a id="lab4"></a>
 ## Lab 4 - The Agent Uses the Designed CLI (~8 minutes)
 
-**Purpose: Repeat Lab 2's run with the Lab 3 CLI — same model, same loop, same question — and compare. Then have the agent open a ticket.**
+**Purpose: Give the agent `repo_tool.py` from Lab 3 in place of Lab 2's raw programs, repeat Lab 2's run — same model, same loop, same question — and compare. Then have the agent open a ticket.**
 
 1. Merge in the completed code, then save and close the diff tab. The loop is unchanged; the TODOs are `run_tool` and one wrapper per subcommand:
 
@@ -369,11 +379,11 @@ cat inventory_service/tickets.json
 <a id="lab5"></a>
 ## Lab 5 - A First MCP Server (~7 minutes)
 
-**Purpose: Publish the same four capabilities as an MCP server, so any MCP client can discover and call them. No LLM in this lab.**
+**Purpose: Publish `repo_tool.py`'s four functions through an MCP server, so any MCP client can discover and call them. No LLM in this lab.**
 
-**The situation:** `repo_tool.py` works for one agent that knows how to start it. Other teams want the same tools in an IDE, a chat client and a CI bot. MCP is the standard way to publish tools so that clients you didn't write can use them.
+**The situation:** `repo_tool.py` works for one agent that knows how to start it. Other teams want the same tools in an IDE, a chat client and a CI bot. MCP is the standard way to publish tools so that clients you didn't write can use them. We don't rewrite anything: the server is a second way to reach the same code, and `repo_tool.py` keeps working as a command.
 
-1. Open the server skeleton. It imports the Lab 3 functions unchanged; only the way they are offered changes. `search_code` (blue) is the finished example: `@mcp.tool()` registers it, its type hints become its JSON schema, and its docstring becomes the description the model reads.
+1. Open the server skeleton. Line 23 imports `do_search`, `do_tests`, `do_log_summary` and `do_ticket` from `cli_tools/repo_tool.py` unchanged; only the way they are offered changes. `search_code` (blue) is the finished example: `@mcp.tool()` registers it, its type hints become its JSON schema, and its docstring becomes the description the model reads.
 
 ```
 code mcp_server/repo_mcp.py
@@ -391,7 +401,7 @@ code -d extra/repo_mcp_complete.txt mcp_server/repo_mcp.py
 
 | What you're merging | Why |
 |---|---|
-| **`run_tests`, `summarize_log`, `open_ticket`** — each exposed like `search_code`, with a one-line body that calls the Lab 3 function. | Publishing a tool over MCP is mostly a matter of describing it accurately. The type hints and docstring do the rest. |
+| **`run_tests`, `summarize_log`, `open_ticket`** — each exposed like `search_code`, with a one-line body that calls the matching `repo_tool.py` function. | Publishing a tool over MCP is mostly a matter of describing it accurately. The type hints and docstring do the rest. |
 
 ![Merging the three MCP tools](./images/hoa5-3.png?raw=true "Merging the three MCP tools")
 
@@ -417,7 +427,19 @@ python mcp_server/try_server.py
 
 <br><br>
 
-5. All four tools are listed with generated schemas. Find `"required": ["title", "body"]` on `open_ticket`: a client can reject a bad call before your code runs. The `search_code` call at the end returns the same JSON that Lab 3 produced.
+5. Read the output from top to bottom. The client did two things: it asked the server which tools it has, then it called one of them.
+
+| Look at | What it tells you |
+|---|---|
+| **The four `*` entries** (`search_code`, `run_tests`, `summarize_log`, `open_ticket`) | The server reported its own tools. The client had no list of them in advance. |
+| **`description:`** under each tool | The first line of that function's docstring. The model reads the full docstring to decide when to use the tool. |
+| **`input schema:`** under `open_ticket` | A description of the arguments the tool accepts, built from the Python line `def open_ticket(title: str, body: str)`. `"type": "string"` comes from `str`. `"required": ["title", "body"]` is there because neither argument has a default value. You didn't write any of it. |
+| **`input schema:`** under `search_code` | `max_results` has `"default": 20` and is not in `required`, because the Python parameter has a default (`max_results: int = 20`). |
+| **The last line**, under `=== Calling search_code ===` | The client called `search_code` with the pattern `total_value`. The reply is the same JSON that `repo_tool.py search --pattern "total_value"` gave you in Lab 3, because both run the same `do_search` function. |
+
+![open_ticket's generated schema and the search_code result](./images/hoa5-6.png?raw=true "open_ticket's generated schema and the search_code result")
+
+Why the schema matters: the MCP layer checks every call against it before your function runs. A call that leaves out `body`, or sends a number where text belongs, is turned away without reaching your code. You'll see this happen in Lab 7.
 
 <br><br>
 
@@ -433,7 +455,7 @@ python mcp_server/try_server.py mcp_server/git_mcp.py
 
 <br><br>
 
-7. **What just happened.** You published tools without writing an API: MCP turned your functions into a typed list that any client can discover, and one small client can use any server. CLIs don't give you that kind of sharing. The tools are still good because of the Lab 3 checklist; MCP makes them portable.
+7. **What just happened.** You published tools without writing an API: MCP turned your functions into a typed list that any client can discover, and one small client can use any server. CLIs don't give you that kind of sharing. The tools are still good because of the Lab 3 checklist; MCP makes them portable. There is now one set of tool code, `repo_tool.py`, with two ways in: the command line (Lab 4) and MCP (this server).
 
 <p align="center">
 **[END OF LAB]**
@@ -446,7 +468,7 @@ python mcp_server/try_server.py mcp_server/git_mcp.py
 
 **Purpose: Make the agent an MCP client that discovers its tools at startup, with nothing hardcoded, and run the full investigation through MCP.**
 
-**The situation:** The agent should know nothing about the server in advance: no import, no tool list. If that works, it can use any server, which Labs 7, 8 and 9 rely on.
+**The situation:** The agent should know nothing about the server in advance: no import, no tool list. If that works, it can use any server, which Labs 7, 8 and 9 rely on. Its tools are still `repo_tool.py`'s four functions, now reached through `repo_mcp.py` instead of the command line.
 
 1. Merge in the completed code, then save and close the diff tab. The two TODOs are `build_system_prompt` and `call_mcp_tool`:
 
@@ -506,9 +528,9 @@ python agents/mcp_agent.py "Check the log for errors, run the tests, search the 
 <a id="lab7"></a>
 ## Lab 7 - CLI vs MCP: Head-to-Head (~8 minutes)
 
-**Purpose: Run one task through the Lab 4 agent (CLI tools) and the Lab 6 agent (MCP tools), then compare the transcripts, the numbers and the error handling.**
+**Purpose: Run one task through the Lab 4 agent (reaches `repo_tool.py` as a command) and the Lab 6 agent (reaches it through MCP), then compare the transcripts, the numbers and the error handling.**
 
-**The situation:** You've built the same four capabilities twice. Which should a team standardize on? That depends on what you measure.
+**The situation:** The agent now has two ways to reach the same `repo_tool.py` code: as a command (Lab 4) and through MCP (Lab 6). Which should a team standardize on? That depends on what you measure.
 
 1. Open the comparison script (complete, no merge). The blue highlights show its three jobs: run both agents on one task, count tool calls and time, save both transcripts to `transcripts/` (scroll down to line 44 to see them).
 
@@ -654,7 +676,7 @@ python agents/mcp_agent.py --server mcp_server/git_mcp.py "Use git_readonly to r
 
 **Purpose: Put every tool call through a policy check — an allowlist, argument validation, human approval for anything that changes something, and a log of each decision — all in code, outside the model.**
 
-**The situation:** In Lab 4 the agent opened a ticket because a sentence asked it to. For a tool like "restart the service", that isn't acceptable. The agent keeps the same tools, and a human decides on anything with consequences.
+**The situation:** In Lab 4 the agent opened a ticket because a sentence asked it to. For a tool like "restart the service", that isn't acceptable. The agent keeps the same tools (`repo_tool.py`'s functions, through `repo_mcp.py`), and a human decides on anything with consequences.
 
 1. Open the policy (complete). The four controls are in blue: `ALLOWED_TOOLS`, `APPROVAL_REQUIRED`, `validate_call` (checks arguments against the tool's schema), and `audit` (writes one JSON line per decision). None of it depends on the model behaving.
 
@@ -836,8 +858,8 @@ The deck defines these where they come up; this is the one place to look them al
 |---|---|
 | `inventory_service/` | The application you are on call for, and the only part you don't build: `inventory.py` (the service, with the bug), `test_inventory.py` (its tests), `logs/app.log` (its log), `tickets.json` (its ticket store). |
 | `agents/` | The agents (Labs 1, 2, 4, 6, 9) and the Lab 7 comparison script. `llm.py` is the shared model connection. |
-| `cli_tools/` | The CLI you design in Lab 3. |
-| `mcp_server/` | The MCP servers (Labs 5 and 8) and the test client. |
+| `cli_tools/` | `repo_tool.py`, the CLI you build in Lab 3. It supplies the agent's tools in every later lab except Lab 8: as a command in Lab 4, and through `mcp_server/repo_mcp.py` in Labs 5-7, 9 and 10. |
+| `mcp_server/` | The MCP servers: `repo_mcp.py` (Lab 5, publishes `repo_tool.py`'s functions) and `git_mcp.py` (Lab 8), plus the test client. |
 | `guardrails/` | The Lab 9 policy. |
 | `eval/` | The Lab 10 scenarios and eval runner. |
 | `extra/` | The finished code you merge from. You never edit these files; they are the left side of every diff. |
