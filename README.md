@@ -125,7 +125,7 @@ source scripts/setup-key.sh --remove
 *Daily budget:* Groq's free tier allows about **200,000 tokens per day** per key. A full run
 of all ten labs fits, but re-running the longer labs many times can use it up. If that happens
 you'll see `[groq: daily token budget used up - falling back to local Ollama]` and the agent
-simply continues on the local model — nothing to fix, it just gets slower until the budget
+continues on the local model — nothing to fix, it gets slower until the budget
 resets the next day.
 
 <br><br>
@@ -154,7 +154,7 @@ If you prefer to run locally instead of in a Codespace, you need:
 | `mcp_server/` | MCP servers: repo tools server, git wrapper server, test client |
 | `guardrails/` | Guardrail policy used by the safe agent in Lab 9 |
 | `eval/` | Evaluation harness and scenarios for Lab 10 |
-| `inventory_service/` | The small application (with a bug!) that your agent investigates all day |
+| `inventory_service/` | The small application (with a bug!) that your agent investigates across the labs |
 | `extra/` | Completed versions of lab code used in the diff-merge steps |
 | `scripts/` | Setup scripts: Ollama install/start, `setup-key.sh` (Groq key), `check-groq.sh` |
 | `merge-info.json` | Hover notes and highlights for the Merge Info VS Code extension (installed on attach from `.devcontainer/`) |
@@ -164,7 +164,7 @@ If you prefer to run locally instead of in a Codespace, you need:
 
 - **Ollama responses are slow**: on a 4-core Codespace each model call takes 3–10 seconds once
   the model is loaded (an agent run is typically 30–90 seconds; the eval suite ~2 minutes). The
-  very first call after a Codespace starts can take up to 2 minutes while the model loads —
+  first call after a Codespace starts can take up to 2 minutes while the model loads —
   the setup scripts pre-load it and keep it in memory. For ~1 s responses use Groq (Setup step 4).
 - **Agent ends with "Gave up: reached max steps"**: the model kept calling tools instead of
   answering. Every observation now carries a finish reminder (`observation_message` in

@@ -1,6 +1,6 @@
 # Hands of AI
 ## Building AI Agents That Act: Tools via CLIs and MCP
-## Full-day workshop labs
+## Workshop labs
 ## Revision 1.11 - 09/22/26
 
 **Startup: You need a running GitHub Codespace created from this repository (see README.md). Setup installs Python, Ollama, and the llama3.2:3b model automatically (3-5 minutes). Verify with:**
@@ -18,9 +18,9 @@ python --version
 **NOTES:**
 - **Run all commands from the repository root unless a step says otherwise.**
 - **Local model calls take 5-10 seconds each, so an agent run is typically 30-90 seconds — be patient. For ~1-second responses, set up a free Groq API key (README.md Setup steps 4-5): `source scripts/setup-key.sh`. Every lab uses it automatically; `source scripts/setup-key.sh --remove` switches back.**
-- **The scenario all day: you're building an on-call engineer's assistant. A small inventory service in `inventory_service/` has a failing nightly report. Your agent will gain the tools to investigate it — and by the end, guardrails so you can trust it to act.**
+- **The scenario: you're building an on-call engineer's assistant. A small inventory service in `inventory_service/` has a failing nightly report. Your agent will gain the tools to investigate it — and by the end, guardrails so you can trust it to act.**
 - **What's in this repo: `inventory_service/` is the application you are on call for, and the only thing in the repo you do *not* build — `inventory.py` is the service (it has the bug), `test_inventory.py` is its test suite, `logs/app.log` is its log, `tickets.json` is its ticket store. Everything else is what you build today: `agents/` the agents, `cli_tools/` the CLI you design in Lab 3, `mcp_server/` the MCP servers, `guardrails/` the Lab 9 policy, `eval/` the Lab 10 harness. `extra/` holds the finished code you merge from — you never edit those files; they are the left-hand side of every diff.**
-- **Expected failures are part of this workshop. Several steps deliberately produce a failing test, an error message, or a refusal — that is how you see the bug, the design, or the guardrail actually working. Every step whose output is *supposed* to look alarming is followed by an `Expected output` note telling you exactly what you should see and why. If a step has no such note, its output should be clean — and if it isn't, something really did go wrong.**
+- **Expected failures are part of this workshop. Several steps deliberately produce a failing test, an error message, or a refusal — that is how you see the bug, the design, or the guardrail working. Every step whose output is *supposed* to look alarming is followed by an `Expected output` note telling you exactly what you should see and why. If a step has no such note, its output should be clean — and if it isn't, something went wrong.**
 </br></br>
 
 **Assembling Code**
@@ -47,7 +47,7 @@ python --version
 | 1 | The Agent Loop | reason -> act -> observe, with Python-function tools |
 | 2 | Tools from the Command Line | raw CLIs: grep, pytest, git, tail |
 | 3 | Designing an Agent-Friendly CLI | answers as JSON, size-limited output, exit codes that mean something |
-| 4 | The Agent Meets the Designed CLI | the agent uses your Lab 3 tool |
+| 4 | The Agent Uses the Designed CLI | the agent calls your Lab 3 tool |
 | 5 | A First MCP Server | expose the same tools over MCP |
 | 6 | The MCP-Powered Agent | discover tools at startup, nothing hardcoded |
 | 7 | CLI vs MCP: Head-to-Head | same task, offered two different ways, compared |
@@ -73,7 +73,7 @@ Each lab ends with **What just happened** — read it; that's where the point of
 
 ## Words we use today
 
-Every one of these is defined again in the lab where you first meet it. This is the one place to look them all up.
+Every one of these is defined again in the lab where it first appears. This is the one place to look them all up.
 
 | Term | What it means here |
 |---|---|
@@ -83,7 +83,7 @@ Every one of these is defined again in the lab where you first meet it. This is 
 | **prompt engineering** | Wording text carefully because the model's behavior depends on it. In this workshop the text that matters most is your tool descriptions. |
 | **context** | Everything the model can see at once — the conversation so far plus every tool result. It has a size limit, which is why we cap how much output a tool returns. |
 | **exit code** | The number a command-line program leaves behind when it finishes: `0` means it worked, anything else means it didn't. `echo $?` prints it. |
-| **side effect** | A tool that changes something instead of just reporting — writes a file, opens a ticket, restarts a service. These are the calls worth asking a human about. |
+| **side effect** | A tool that changes something instead of only reporting — writes a file, opens a ticket, restarts a service. These are the calls worth asking a human about. |
 | **size-limited output** | A deliberate cap on how much a tool returns, so one noisy command can't fill the model's context. |
 | **surface** | How a tool is *offered* to an agent. The same four capabilities appear on two surfaces today: as a command line (Labs 2-4) and as an MCP server (Labs 5-7). The capability is the same; the surface is the packaging. |
 | **MCP** | Model Context Protocol — a standard way to publish tools so any client can discover and call them without being written for your code specifically. |
@@ -102,7 +102,7 @@ Every one of these is defined again in the lab where you first meet it. This is 
 
 **The situation:** It's 9:16 AM and the nightly inventory report has failed. The application log holds the clue: a `total_value mismatch` — the ledger expected 149.95, the service returned 39.99. Which one is right? A human would read the log and do the arithmetic. We'll build an agent that does exactly that.
 
-**By the end you'll have:** `agents/simple_agent.py` — an agent with three tools (read a file, list a directory, do arithmetic) that reads the log, checks the math, and tells you the ledger is right and the service is wrong. That's the first clue in a bug hunt that runs all day.
+**By the end you'll have:** `agents/simple_agent.py` — an agent with three tools (read a file, list a directory, do arithmetic) that reads the log, checks the math, and tells you the ledger is right and the service is wrong. That's the first clue in a bug hunt that runs through every lab.
 
 1. Look at the evidence yourself first, so you'll know whether the agent gets it right. Lines 3-4 add stock (5 widgets at 19.99, 10 gadgets at 5.00); line 6 is the mismatch:
 
@@ -171,7 +171,7 @@ python agents/simple_agent.py "Read inventory_service/inventory.py and tell me w
 
 ![The agent reads the code and spots the bug](./images/hoa1-8.png?raw=true "The agent reads the code and spots the bug")
 
-**A note on what you'll see:** the `observation:` for this step stops partway through the file, on the line `class InventoryError(Exception):`. **That is not an error** — it's the 200-character display cut from step 7 landing in the middle of the source, and `InventoryError` is simply a class defined near the top of `inventory.py`. The agent read the first 2000 characters and answered from all of them; you're just seeing the first tenth of that in the transcript.
+**A note on what you'll see:** the `observation:` for this step stops partway through the file, on the line `class InventoryError(Exception):`. **That is not an error** — it's the 200-character display cut from step 7 landing in the middle of the source, and `InventoryError` is a class defined near the top of `inventory.py`. The agent read the first 2000 characters and answered from all of them; the transcript shows only the first tenth.
 
 <br><br>
 
@@ -213,7 +213,7 @@ python -m pytest inventory_service -q
 
 <br><br>
 
-3. Open the skeleton. The loop at the bottom is the Lab 1 loop, unchanged. What's new is the tools: instead of Python functions, four thin wrappers (`grep_code`, `run_tests`, `git_history`, `tail_log`). The TODOs (yellow) are `run_command` — the one place that actually runs a program — and the single line in each wrapper that calls it.
+3. Open the skeleton. The loop at the bottom is the Lab 1 loop, unchanged. What's new is the tools: instead of Python functions, four thin wrappers (`grep_code`, `run_tests`, `git_history`, `tail_log`). The TODOs (yellow) are `run_command` — the one place that runs a program — and the single line in each wrapper that calls it.
 
 ```
 code agents/cli_agent.py
@@ -290,7 +290,7 @@ code cli_tools/repo_tool.py
 
 <br><br>
 
-2. Study `do_tests`: it runs the very same pytest as Lab 2 but returns a small dict — passed/failed counts and failure names. The tool absorbs the mess so the model doesn't have to. That is the pattern the three TODOs copy.
+2. Study `do_tests`: it runs the same pytest as Lab 2 but returns a small dict — passed/failed counts and failure names. The tool absorbs the mess so the model doesn't have to. That is the pattern the three TODOs copy.
 
 <br><br>
 
@@ -352,7 +352,7 @@ python cli_tools/repo_tool.py search --pattern "BUG"
 
 <br><br>
 
-8. Open a ticket and confirm it persisted. This is the tool's one *side effect* — the one place it changes something in the world instead of just reporting on it — remember that when we get to guardrails in Lab 9:
+8. Open a ticket and confirm it persisted. This is the tool's one *side effect* — the one place it changes something in the world instead of only reporting on it — remember that when we get to guardrails in Lab 9:
 
 ```
 python cli_tools/repo_tool.py ticket --title "Manual test" --body "Opened by hand in Lab 3"
@@ -361,7 +361,7 @@ cat inventory_service/tickets.json
 
 <br><br>
 
-9. **What just happened, and why it matters.** The capabilities are the same as Lab 2; only the design changed, and it changed around the consumer. Clear inputs, predictable JSON output, a cap on how much comes back, useful `--help`, errors that explain themselves, exit codes that tell the truth: that checklist is the most transferable thing you'll take from today, because in Lab 5 you'll see it applies verbatim to MCP tools too. Next: give the agent this tool and watch the same model behave differently.
+9. **What just happened, and why it matters.** The capabilities are the same as Lab 2; only the design changed, and it changed around the consumer. Clear inputs, predictable JSON output, a cap on how much comes back, useful `--help`, errors that explain themselves, exit codes that tell the truth: that checklist is the most transferable thing you'll take from this workshop, because in Lab 5 you'll see it applies verbatim to MCP tools too. Next: give the agent this tool and watch the same model behave differently.
 
 <p align="center">
 **[END OF LAB]**
@@ -369,7 +369,7 @@ cat inventory_service/tickets.json
 
 </br></br>
 
-## Lab 4 - The Agent Meets the Designed CLI (~12 minutes)
+## Lab 4 - The Agent Uses the Designed CLI (~12 minutes)
 
 **Purpose: Repeat the Lab 2 experiment with your designed CLI — same model, same loop, same question — and see what tool design buys you. Then let the agent act on the world for the first time.**
 
@@ -446,7 +446,7 @@ cat inventory_service/tickets.json
 
 **Purpose: Publish the same four capabilities through the Model Context Protocol, so any MCP client can discover them — with schemas and descriptions generated from your code. No LLM in this lab.**
 
-**The situation:** `repo_tool.py` works for one agent that knows how to spawn it. Tomorrow three teams want the same tools — in an IDE, in a chat client, in a CI bot. Copying a Python file around isn't sharing. MCP is the standard way to publish tools so that clients you've never met can discover and call them.
+**The situation:** `repo_tool.py` works for one agent that knows how to spawn it. Tomorrow three teams want the same tools — in an IDE, in a chat client, in a CI bot. Copying a Python file around isn't sharing. MCP is the standard way to publish tools so that clients you didn't write can discover and call them.
 
 **By the end you'll have:** `mcp_server/repo_mcp.py` serving the four tools over MCP, and proof from a tiny client that a stranger can discover them, complete with JSON schemas you never wrote.
 
@@ -502,7 +502,7 @@ python mcp_server/try_server.py
 
 <br><br>
 
-8. Point the *same* client at a different server (a preview of Lab 8's git server, still a skeleton). Nothing in the client changed; it simply discovers whatever it's given:
+8. Point the *same* client at a different server (a preview of Lab 8's git server, still a skeleton). Nothing in the client changed; it discovers whatever it's given:
 
 ```
 python mcp_server/try_server.py mcp_server/git_mcp.py
@@ -510,11 +510,11 @@ python mcp_server/try_server.py mcp_server/git_mcp.py
 
 ![Same client, different server](./images/hoa5-8.png?raw=true "Same client, different server")
 
-> **Expected output:** all three git tools listed, even though two of them are still unfinished skeletons you won't complete until Lab 8. Their `@mcp.tool()` decorators, names and type hints are already in place, so the *catalogue* is complete before the *implementations* are. The tool the client actually calls, `recent_commits`, is the finished one, so real commits come back.
+> **Expected output:** all three git tools listed, even though two of them are still unfinished skeletons you won't complete until Lab 8. Their `@mcp.tool()` decorators, names and type hints are already in place, so the *catalogue* is complete before the *implementations* are. The tool the client calls, `recent_commits`, is the finished one, so real commits come back.
 
 <br><br>
 
-9. **What just happened, and why it matters.** You published tools without writing an API: the protocol turned your functions into a discoverable, typed catalogue, and a 50-line client you've now seen twice can consume *any* server. That's the shareability CLIs lack. What hasn't changed is the checklist — the tools are good because Lab 3 made them good; MCP just makes them portable. Next: teach the agent to be that client.
+9. **What just happened, and why it matters.** You published tools without writing an API: the protocol turned your functions into a discoverable, typed catalogue, and a 50-line client you've now seen twice can consume *any* server. That's the shareability CLIs lack. What hasn't changed is the checklist — the tools are good because Lab 3 made them good; MCP makes them portable. Next: teach the agent to be that client.
 
 <p align="center">
 **[END OF LAB]**
@@ -589,7 +589,7 @@ python agents/mcp_agent.py "Check the log for errors, run the tests, search the 
 
 <br><br>
 
-8. **What just happened, and why it matters.** The agent found the root cause of the day's incident using tools it learned about at startup, over a standard protocol, from a server it never imported. Swap the server and the agent gains new abilities with zero code changes — you'll do exactly that in Lab 8. Next: CLI and MCP have now solved the same problem; time to compare them with evidence instead of opinions.
+8. **What just happened, and why it matters.** The agent found the root cause of the incident using tools it learned about at startup, over a standard protocol, from a server it never imported. Swap the server and the agent gains new abilities with zero code changes — you'll do exactly that in Lab 8. Next: CLI and MCP have now solved the same problem; time to compare them with evidence instead of opinions.
 
 <p align="center">
 **[END OF LAB]**
@@ -601,7 +601,7 @@ python agents/mcp_agent.py "Check the log for errors, run the tests, search the 
 
 **Purpose: Run the identical task through the Lab 4 agent (CLI tools) and the Lab 6 agent (MCP tools), then compare the transcripts and the numbers — so the CLI-versus-MCP decision is an engineering judgment, not a fashion.**
 
-**The situation:** You've built the same four capabilities twice. Leadership will ask "which one should we standardize on?" The honest answer depends on what you measure and what you're building. This lab collects the evidence.
+**The situation:** You've built the same four capabilities twice. Leadership will ask "which one should we standardize on?" The answer depends on what you measure and what you're building. This lab collects the evidence.
 
 **By the end you'll have:** two transcripts of the same investigation, a comparison table, and a decision framework you can defend.
 
@@ -637,7 +637,7 @@ code transcripts/cli_transcript.md transcripts/mcp_transcript.md
 
 <br><br>
 
-5. Now the numbers in the table. *Tool calls* is the count of `--- step` lines; wall time is dominated by model calls (one per step, plus the final answer), so if one agent took much longer, first check whether it simply took more steps. If the step counts are close and the times aren't, look elsewhere: on Groq's free tier a gap is usually rate-limit backoff inherited from the first run, and on Ollama the first run may have paid to load the model. Measurements need context before they become verdicts.
+5. Now the numbers in the table. *Tool calls* is the count of `--- step` lines; wall time is dominated by model calls (one per step, plus the final answer), so if one agent took much longer, first check whether it took more steps. If the step counts are close and the times aren't, look elsewhere: on Groq's free tier a gap is usually rate-limit backoff inherited from the first run, and on Ollama the first run may have paid to load the model. Measurements need context before they become verdicts.
 
 <br><br>
 
@@ -659,7 +659,7 @@ python agents/mcp_agent.py "Call search_code with pattern set to BUG and max_res
 
 > **Expected output:** an error, and here the error *is* the success condition. The call never reached your Python at all — MCP's generated schema saw a string where an integer was required and rejected it first. Contrast that with step 6, where the CLI tool's own hand-written code had to notice the bad value and explain it.
 
-If your model "helpfully" sends `10` instead of the word, the call just succeeds — run it again, or insist harder in the task; the demonstration needs the bad value to reach the schema.
+If your model "helpfully" sends `10` instead of the word, the call succeeds — run it again, or insist harder in the task; the demonstration needs the bad value to reach the schema.
 
 <br><br>
 
@@ -909,7 +909,7 @@ python eval/run_evals.py
 
 <br><br>
 
-7. Re-run (a little longer now, with four scenarios) and see whether your agent meets *your* bar. A tight step budget is a design decision — it's how you catch an agent that gets the right answer the slow, expensive way:
+7. Re-run (a little longer now, with four scenarios) and see whether your agent clears *your* bar. A tight step budget is a design decision — it's how you catch an agent that gets the right answer the slow, expensive way:
 
 ```
 python eval/run_evals.py
@@ -919,7 +919,7 @@ python eval/run_evals.py
 
 <br><br>
 
-8. **What just happened, and why it matters.** You now have a repeatable answer to "does it work?" that runs like a test suite and can gate a deployment. And step back at the day in one picture: the same loop from Lab 1 drove Python functions, raw CLIs, a designed CLI, MCP servers and a wrapped CLI — with policy deciding what it *may* do and evals proving what it *does*. Design the tool well first; then pick the surface that fits how it will be shared, validated, and trusted. That is the whole course.
+8. **What just happened, and why it matters.** You now have a repeatable answer to "does it work?" that runs like a test suite and can gate a deployment. And step back to see the whole workshop in one picture: the same loop from Lab 1 drove Python functions, raw CLIs, a designed CLI, MCP servers and a wrapped CLI — with policy deciding what it *may* do and evals proving what it *does*. Design the tool well first; then pick the surface that fits how it will be shared, validated, and trusted. That is the whole course.
 
 <p align="center">
 **[END OF LAB]**

@@ -180,7 +180,7 @@
         "anchor": "kind = check[\"type\"]",
         "title": "Fact-based eval checks",
         "note": [
-          "**Four fact-based checks — no LLM judging, just observable outcomes.**",
+          "**Four fact-based checks — no LLM judging, only observable outcomes.**",
           "- final_contains / final_not_empty inspect the answer; ticket_created inspects state",
           "- max_tool_calls enforces a step budget per scenario"
         ]
@@ -409,7 +409,7 @@
         "done": "kind = check[\"type\"]",
         "title": "Fact-based eval checks",
         "note": [
-          "**Four fact-based checks — no LLM judging, just observable outcomes.**",
+          "**Four fact-based checks — no LLM judging, only observable outcomes.**",
           "- final_contains / final_not_empty inspect the answer; ticket_created inspects state",
           "- max_tool_calls enforces a step budget per scenario"
         ],
@@ -546,7 +546,7 @@
         "title": "1. Launch the server",
         "note": [
           "**The client starts the server as a subprocess and talks to it over stdin/stdout.**",
-          "- No import, no URL - just a script path"
+          "- No import, no URL - only a script path"
         ]
       },
       {
@@ -580,7 +580,7 @@
       {
         "anchor": "args=[server_script],",
         "lines": 1,
-        "title": "(a) No import - just a script path",
+        "title": "(a) No import - only a script path",
         "note": [
           "**The agent never imports the server; it launches whatever script you point it at.**",
           "- Lab 8 swaps in git_mcp.py with --server and nothing else changes"
@@ -702,7 +702,7 @@
         "lines": 1,
         "title": "A scenario is a task...",
         "note": [
-          "**Each scenario gives the agent one realistic task - the same kind you ran all day.**"
+          "**Each scenario gives the agent one realistic task - the same kind you ran in earlier labs.**"
         ]
       },
       {
