@@ -1,7 +1,7 @@
 # Hands of AI
 ## Building AI Agents That Act: Tools via CLIs and MCP
 ## Workshop labs
-## Revision 1.12 - 09/22/26
+## Revision 1.13 - 09/23/26
 
 **Startup: You need a running GitHub Codespace created from this repository (see README.md). Setup installs Python, Ollama, and the llama3.2:3b model automatically (3-5 minutes). Verify with:**
 
@@ -68,11 +68,13 @@ head -8 inventory_service/logs/app.log
 
 <br><br>
 
-2. Open the skeleton. The three tools are plain Python functions (`calculator`, `read_file`, `list_files`). The `TOOLS` registry (blue) describes each tool in one sentence, and that sentence is all the model ever knows about it. The two TODOs (yellow) are where code will land. (The model connection every agent uses is in `agents/llm.py`.)
+2. Open the skeleton. The three tools are plain Python functions (`calculator`, `read_file`, `list_files`). The `TOOLS` registry (blue) describes each tool in one sentence, and that sentence is all the model ever knows about it. The two TODOs (yellow) are where code will land; scroll down to line 56 to see both. (The model connection every agent uses is in `agents/llm.py`.)
 
 ```
 code agents/simple_agent.py
 ```
+
+![Blue TOOLS registry and yellow TODO](./images/hoa1-2.png?raw=true "Blue TOOLS registry and yellow TODO")
 
 <br><br>
 
@@ -129,7 +131,7 @@ The `observation:` stops at `class InventoryError(Exception):`. That is the 200-
 
 </br></br>
 
-## Lab 2 - Tools from the Command Line (~10 minutes)
+## Lab 2 - Tools from the Command Line (~9 minutes)
 
 **Purpose: Give the agent tools engineers already use — pytest, grep, git, tail — unchanged, and see what raw terminal output costs the model.**
 
@@ -200,7 +202,7 @@ python agents/cli_agent.py "Show the last 10 lines of the application log and te
 
 </br></br>
 
-## Lab 3 - Designing an Agent-Friendly CLI (~9 minutes)
+## Lab 3 - Designing an Agent-Friendly CLI (~8 minutes)
 
 **Purpose: Build a CLI designed for an agent — JSON answers, capped output, clear error messages, meaningful exit codes — and test it by hand. No LLM in this lab.**
 
@@ -211,6 +213,8 @@ python agents/cli_agent.py "Show the last 10 lines of the application log and te
 ```
 code cli_tools/repo_tool.py
 ```
+
+![Blue design checklist and yellow TODO](./images/hoa3-1.png?raw=true "Blue design checklist and yellow TODO")
 
 <br><br>
 
@@ -285,7 +289,7 @@ cat inventory_service/tickets.json
 
 </br></br>
 
-## Lab 4 - The Agent Uses the Designed CLI (~9 minutes)
+## Lab 4 - The Agent Uses the Designed CLI (~8 minutes)
 
 **Purpose: Repeat Lab 2's run with the Lab 3 CLI — same model, same loop, same question — and compare. Then have the agent open a ticket.**
 
@@ -344,7 +348,7 @@ cat inventory_service/tickets.json
 
 </br></br>
 
-## Lab 5 - A First MCP Server (~9 minutes)
+## Lab 5 - A First MCP Server (~7 minutes)
 
 **Purpose: Publish the same four capabilities as an MCP server, so any MCP client can discover and call them. No LLM in this lab.**
 
@@ -355,6 +359,8 @@ cat inventory_service/tickets.json
 ```
 code mcp_server/repo_mcp.py
 ```
+
+![Blue worked example and yellow TODO](./images/hoa5-1.png?raw=true "Blue worked example and yellow TODO")
 
 <br><br>
 
@@ -377,6 +383,8 @@ code -d extra/repo_mcp_complete.txt mcp_server/repo_mcp.py
 ```
 code mcp_server/try_server.py
 ```
+
+![The four client stages in blue](./images/hoa5-4.png?raw=true "The four client stages in blue")
 
 <br><br>
 
@@ -414,7 +422,7 @@ python mcp_server/try_server.py mcp_server/git_mcp.py
 
 </br></br>
 
-## Lab 6 - The MCP-Powered Agent (~10 minutes)
+## Lab 6 - The MCP-Powered Agent (~8 minutes)
 
 **Purpose: Make the agent an MCP client that discovers its tools at startup, with nothing hardcoded, and run the full investigation through MCP.**
 
@@ -475,17 +483,19 @@ python agents/mcp_agent.py "Check the log for errors, run the tests, search the 
 
 </br></br>
 
-## Lab 7 - CLI vs MCP: Head-to-Head (~10 minutes)
+## Lab 7 - CLI vs MCP: Head-to-Head (~8 minutes)
 
 **Purpose: Run one task through the Lab 4 agent (CLI tools) and the Lab 6 agent (MCP tools), then compare the transcripts, the numbers and the error handling.**
 
 **The situation:** You've built the same four capabilities twice. Which should a team standardize on? That depends on what you measure.
 
-1. Open the comparison script (complete, no merge). The blue highlights show its three jobs: run both agents on one task, count tool calls and time, save both transcripts to `transcripts/`.
+1. Open the comparison script (complete, no merge). The blue highlights show its three jobs: run both agents on one task, count tool calls and time, save both transcripts to `transcripts/` (scroll down to line 44 to see them).
 
 ```
 code agents/compare_agents.py
 ```
+
+![The comparison script with its three jobs in blue](./images/hoa7-1.png?raw=true "The comparison script with its three jobs in blue")
 
 <br><br>
 
@@ -524,10 +534,10 @@ python cli_tools/repo_tool.py log-summary --level DEBUG
 6. Make the same kind of mistake through MCP (a wrong *type*) and see where it's caught:
 
 ```
-python agents/mcp_agent.py "Call search_code with pattern set to BUG and max_results set to the word ten, then tell me exactly what came back."
+python agents/mcp_agent.py "Call search_code with pattern BUG and max_results set to the string 'ten' exactly as written - do not convert it to a number. Then tell me exactly what came back."
 ```
 
-> **Expected output:** an error. The schema saw a string where an integer was required and rejected the call before your Python ran; in step 5 your own code had to catch the bad value. If the model sends `10` instead of the word, the call succeeds; run it once more.
+> **Expected output:** a `TOOL ERROR` saying `max_results` must be a valid integer. The schema rejected the call before your Python ran; in step 5 your own code had to catch the bad value. The local model may then retry with `10`, which succeeds.
 
 ![Schema validation rejects the call](./images/hoa7-7.png?raw=true "Schema validation rejects the call")
 
@@ -555,6 +565,8 @@ python agents/mcp_agent.py "Call search_code with pattern set to BUG and max_res
 ```
 code mcp_server/git_mcp.py
 ```
+
+![Blue allowlist, _git and recent_commits](./images/hoa8-1.png?raw=true "Blue allowlist, _git and recent_commits")
 
 <br><br>
 
@@ -601,7 +613,7 @@ python agents/mcp_agent.py --server mcp_server/git_mcp.py "Use the git_readonly 
 python agents/mcp_agent.py --server mcp_server/git_mcp.py "Use git_readonly to run the log subcommand with the argument --output=/tmp/pwned and tell me exactly what comes back."
 ```
 
-> **Expected output:** another refusal. `log` is on the allowlist; the no-options rule stopped the call because the argument starts with `-`.
+> **Expected output:** another refusal. `log` is on the allowlist; the no-options rule stopped the call because the argument starts with `-`. The local model often can't build this call (it leaves out `subcommand`) and gets schema errors instead; with Groq the refusal shows every time.
 
 ![Guard refusing an option flag](./images/hoa8-7.png?raw=true "Guard refusing an option flag")
 
@@ -626,6 +638,8 @@ python agents/mcp_agent.py --server mcp_server/git_mcp.py "Use git_readonly to r
 ```
 code guardrails/policy.py
 ```
+
+![Blue policy control points](./images/hoa9-1.png?raw=true "Blue policy control points")
 
 ![Every branch one tool call can take](./diagrams/guardrail-decision-path.png?raw=true "Every branch one tool call can take")
 
@@ -708,6 +722,8 @@ grep rejected_by_human audit_log.jsonl
 ```
 code eval/scenarios.json
 ```
+
+![Blue highlights on a task and its checks](./images/hoa10-1.png?raw=true "Blue highlights on a task and its checks")
 
 <br><br>
 

@@ -509,7 +509,7 @@
     "cli_tools/repo_tool.py": [
       {
         "anchor": "  - clear inputs:       named arguments with types and defaults",
-        "lines": 6,
+        "lines": 8,
         "title": "The design checklist",
         "note": [
           "**Six properties that make a CLI agent-friendly - the whole point of Lab 3.**",
@@ -530,7 +530,7 @@
     "mcp_server/repo_mcp.py": [
       {
         "anchor": "def search_code(pattern: str, max_results: int = 20) -> dict:",
-        "lines": 1,
+        "lines": 7,
         "title": "search_code: the worked example",
         "note": [
           "**One decorator turns a typed Python function into an MCP tool.**",
