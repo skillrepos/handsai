@@ -673,7 +673,7 @@
         "lines": 1,
         "title": "Control point 2: human approval",
         "note": [
-          "**Side-effecting tools stop and ask you before executing - the [y/N] prompt in step 4.**"
+          "**Side-effecting tools stop and ask you before executing - the [y/N] prompt in step 3.**"
         ]
       },
       {
@@ -691,7 +691,7 @@
         "lines": 1,
         "title": "Control point 4: audit log",
         "note": [
-          "**One JSON line per decision in audit_log.jsonl - you read it in step 5.**",
+          "**One JSON line per decision in audit_log.jsonl - you read it in step 4.**",
           "- Executed, denied, approved_by_human, rejected_by_human all land here"
         ]
       }
