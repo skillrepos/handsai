@@ -1,6 +1,6 @@
 # Hands of AI — Building AI Agents That Act: Tools via CLIs and MCP
 
-**Full-day hands-on workshop — Revision 1.11 — 09/22/26**
+**Full-day hands-on workshop — Revision 1.12 — 09/23/26**
 
 AI agents become useful when they can act. In this workshop you build a practical AI agent
 that uses tools through two different surfaces — two ways of offering a tool to an agent: command-line interfaces and the
@@ -116,17 +116,6 @@ You should see `OK    labs model  ->  qwen/qwen3.8-27b`. If it reports `FAIL` be
 Groq has retired that model, the script checks replacements for you and prints the exact
 `export GROQ_MODEL=...` line to run — or tells you to go back to the local model.
 
-To switch back to the local model at any time:
-
-```
-source scripts/setup-key.sh --remove
-```
-
-*Daily budget:* Groq's free tier allows about **200,000 tokens per day** per key. A full run
-of all ten labs fits, but re-running the longer labs many times can use it up. If that happens
-you'll see `[groq: daily token budget used up - falling back to local Ollama]` and the agent
-continues on the local model — nothing to fix, it gets slower until the budget
-resets the next day.
 
 <br><br>
 
@@ -145,57 +134,6 @@ If you prefer to run locally instead of in a Codespace, you need:
 - Python 3.10+, `pip install -r requirements.txt`, and Ollama installed from https://ollama.com
   with `ollama pull llama3.2:3b`
 
-## Repository layout
-
-| Directory | Contents |
-|---|---|
-| `agents/` | The agents you build: simple loop, CLI-tool agent, MCP agent, safe agent |
-| `cli_tools/` | The agent-friendly CLI tool you design in Lab 3 |
-| `mcp_server/` | MCP servers: repo tools server, git wrapper server, test client |
-| `guardrails/` | Guardrail policy used by the safe agent in Lab 9 |
-| `eval/` | Evaluation harness and scenarios for Lab 10 |
-| `inventory_service/` | The small application (with a bug!) that your agent investigates across the labs |
-| `extra/` | Completed versions of lab code used in the diff-merge steps |
-| `scripts/` | Setup scripts: Ollama install/start, `setup-key.sh` (Groq key), `check-groq.sh` |
-| `merge-info.json` | Hover notes and highlights for the Merge Info VS Code extension (installed on attach from `.devcontainer/`) |
-| `labs.md` | **The lab guide — start here** |
-
-## Troubleshooting
-
-- **Ollama responses are slow**: on a 4-core Codespace each model call takes 3–10 seconds once
-  the model is loaded (an agent run is typically 30–90 seconds; the eval suite ~2 minutes). The
-  first call after a Codespace starts can take up to 2 minutes while the model loads —
-  the setup scripts pre-load it and keep it in memory. For ~1 s responses use Groq (Setup step 4).
-- **Agent ends with "Gave up: reached max steps"**: the model kept calling tools instead of
-  answering. Every observation now carries a finish reminder (`observation_message` in
-  `agents/llm.py`); if you still see this on the local model, re-run once or switch to Groq.
-- **Groq key not picked up in a new terminal**: run `source scripts/setup-key.sh` again — it
-  writes the key to `~/.bashrc` so every new terminal has it. `echo $GROQ_API_KEY` to check.
-- **Ollama not responding** (`could not connect to ollama server`, `ollama list` fails):
-  `bash scripts/startOllama.sh`. It is safe to run at any time — it starts the server only if
-  it isn't already up, downloads the model if it is missing, and prints the reason from
-  `/tmp/ollama.log` if the server won't start. Every new terminal runs the same check
-  automatically, so opening a fresh terminal also fixes it.
-- **`address already in use` / stuck server**: `pkill ollama` then `bash scripts/startOllama.sh`
-- **Model not found**: `bash scripts/startOllama.sh` downloads it; `ollama pull llama3.2:3b` also works.
-- **`ollama: command not found`** after setup: the Ollama installer needs `zstd`, which
-  `scripts/startup_ollama.sh` installs first. `bash scripts/startOllama.sh` re-runs that setup for you.
-- **Groq `429` / rate-limit errors**: the free tier has a small per-minute output-token
-  budget; the agents cap output and retry with backoff, so a run may pause for a bit.
-  Running several agents back-to-back (Labs 7 and 10) is where you'll notice it.
-- **`[groq: daily token budget used up - falling back to local Ollama]`**: the key's
-  200,000-tokens-per-day allowance is spent. The run finishes on Ollama automatically and
-  every later run in that process does the same; new runs try Groq again (and fall back again)
-  until the budget resets. To stop the retries, `source scripts/setup-key.sh --remove` for the day.
-- **`No module named 'mcp.server.fastmcp'`**: the labs target MCP Python SDK **2.x**
-  (`MCPServer`); `requirements.txt` pins `mcp>=2,<3`. Reinstall with
-  `pip install -r requirements.txt`.
-- **No hover popups / yellow or blue highlights in the editor**: the Merge Info extension installs
-  in the background when the codespace attaches. Check `cat /tmp/merge-info-install.log`, or install
-  it by hand: `code --install-extension .devcontainer/merge-info-0.3.1.vsix --force`, then reload the
-  window. Toggle the highlights with the *Merge Info: Toggle ...* commands in the palette.
-- **`ModuleNotFoundError`**: make sure the virtual environment is active — `source py_env/bin/activate`
-  from the repo root, or open a new terminal.
 
 ## License
 
