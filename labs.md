@@ -1,7 +1,7 @@
 # Hands of AI
 ## Building AI Agents That Act: Tools via CLIs and MCP
 ## Workshop labs
-## Revision 1.16 - 09/23/26
+## Revision 1.18 - 09/23/26
 
 **Startup: You need a running GitHub Codespace created from this repository (see README.md). Setup installs Python, Ollama, and the llama3.2:3b model automatically (3-5 minutes). Verify with:**
 
@@ -53,7 +53,7 @@ You are building an **on-call engineer's assistant** for a small inventory servi
 </br></br>
 
 <a id="lab1"></a>
-## Lab 1 - The Agent Loop (~11 minutes)
+## Lab 1 - The Agent Loop (~12 minutes)
 
 **Purpose: Build the loop at the center of every agent — the model picks a tool, our code runs it, the result goes back to the model — and use it to answer the first on-call question.**
 
@@ -205,21 +205,13 @@ python agents/cli_agent.py "Show the last 10 lines of the application log and te
 </br></br>
 
 <a id="lab3"></a>
-## Lab 3 - Designing an Agent-Friendly CLI (~8 minutes)
+## Lab 3 - Designing an Agent-Friendly CLI (~12 minutes)
 
 **Purpose: Build a CLI designed for an agent — JSON answers, capped output, clear error messages, meaningful exit codes — and test it by hand. No LLM in this lab.**
 
 **The situation:** The investigation keeps needing four things: search the code, run the tests, summarize the log, open a ticket. We put them in one program, `repo_tool.py`, with a subcommand for each, and design every response for a model to read.
 
-**`repo_tool.py` supplies the agent's tools for the rest of the workshop.** You build it once, here, and never rewrite it. Later labs change only *how the agent reaches it*:
-
-| Lab | How the agent reaches `repo_tool.py` |
-|---|---|
-| 4 | Runs it as a command and reads its JSON reply. |
-| 5 | A new MCP server, `mcp_server/repo_mcp.py`, imports its four functions and publishes them over MCP. `repo_tool.py` itself doesn't change. |
-| 6, 9, 10 | Through that MCP server. |
-| 7 | Both ways, side by side. |
-| 8 | Not used: Lab 8 adds a separate git server. |
+**`repo_tool.py` supplies the agent's tools for the rest of the workshop.** You build it once, here, and never rewrite it. Lab 4 runs it as a command; from Lab 5 on, an MCP server publishes the same four functions.
 
 1. Open the skeleton. The docstring at the top (blue) is the design checklist. `do_tests` (blue) is finished: it runs the same pytest as Lab 2 but returns a small dict of passed and failed counts plus failure names. The three TODOs follow the same pattern.
 
@@ -282,7 +274,7 @@ python cli_tools/repo_tool.py search --pattern "total_value"
 python cli_tools/repo_tool.py search --pattern "total \+="
 ```
 
-> **Expected output:** The first search finds `def total_value` in `inventory.py` and the failing test in `test_inventory.py`. The second finds the one line that adds to the total: `total += item["price"] + item["quantity"]`. The docstring of `total_value` says the total is price *times* quantity, so the `+` between them is the bug. Each search returns exact files and line numbers, so one result tells you what to look for next. The agent works the same way in Labs 4 and 6.
+> **Expected output:** The first search finds `def total_value` in `inventory.py` and the failing test in `test_inventory.py`. The second finds the one line that adds to the total: `total += item["price"] + item["quantity"]`. The docstring of `total_value` says the total is price *times* quantity, so the `+` between them is the bug.
 
 ![search narrows down to the buggy line](./images/hoa3-7.png?raw=true "search narrows down to the buggy line")
 
@@ -304,7 +296,7 @@ python cli_tools/repo_tool.py ticket --title "Manual test" --body "Opened by han
 cat inventory_service/tickets.json
 ```
 
-> **Expected output:** a JSON list holding the same ticket. You are seeing it a second time on purpose: step 6 showed what the tool *said* it did, and this shows what it actually wrote. Only one ticket was created. If you run step 6 again, you'll get `TICKET-0002` and the list will have two entries.
+> **Expected output:** a JSON list holding the same ticket. Step 6 showed what the tool *said* it did; this shows what it actually wrote.
 
 <br><br>
 
@@ -377,7 +369,7 @@ cat inventory_service/tickets.json
 </br></br>
 
 <a id="lab5"></a>
-## Lab 5 - A First MCP Server (~7 minutes)
+## Lab 5 - A First MCP Server (~10 minutes)
 
 **Purpose: Publish `repo_tool.py`'s four functions through an MCP server, so any MCP client can discover and call them. No LLM in this lab.**
 
@@ -465,7 +457,7 @@ python mcp_server/try_server.py mcp_server/git_mcp.py
 </br></br>
 
 <a id="lab6"></a>
-## Lab 6 - The MCP-Powered Agent (~8 minutes)
+## Lab 6 - The MCP-Powered Agent (~9 minutes)
 
 **Purpose: Make the agent an MCP client that discovers its tools at startup, with nothing hardcoded, and run the full investigation through MCP.**
 
@@ -527,7 +519,7 @@ python agents/mcp_agent.py "Check the log for errors, run the tests, search the 
 </br></br>
 
 <a id="lab7"></a>
-## Lab 7 - CLI vs MCP: Head-to-Head (~11 minutes)
+## Lab 7 - CLI vs MCP: Head-to-Head (~12 minutes)
 
 **Purpose: Run one task through the Lab 4 agent (reaches `repo_tool.py` as a command) and the Lab 6 agent (reaches it through MCP), then compare the transcripts, the token cost and the error handling.**
 
@@ -569,21 +561,23 @@ code transcripts/cli_transcript.md transcripts/mcp_transcript.md
 |---|---|
 | **tool calls** | Tools the agent ran. |
 | **model calls** | Times the agent asked the model for its next action: one per tool call, plus the final answer and any retries. |
-| **prompt tokens** | Everything sent to the model, added up over every model call. The whole conversation, including the tool list, is sent again on every call, so this grows faster than the step count. The numbers come from the model API. |
+| **prompt tokens** | Everything sent to the model, added up over the run, as reported by the model API. The whole conversation, tool list included, is re-sent on every call, so this grows faster than the step count. |
 
 <br><br>
 
-5. For the same number of steps, the MCP agent usually sends more prompt tokens. To see why, measure the part that is sent on every call before any work happens, the system prompt with its tool list. This script builds the prompt three ways without calling a model:
+5. For the same number of steps, the MCP agent usually sends more prompt tokens. This script shows why: it builds each agent's system prompt (the part re-sent on every call) without calling a model:
 
 ```
 python agents/measure_prompt.py
 ```
 
+![The system prompt each agent sends, measured](./images/hoa7-5.png?raw=true "The system prompt each agent sends, measured")
+
 | Row | What it shows |
 |---|---|
-| **bare shell (run_command)** | An agent with one tool that runs any command line. The model already knows `git`, `grep` and `pytest` from its training, so one short description is enough. This is the cheapest option, and the riskiest: that one tool can run anything. |
+| **bare shell (run_command)** | One tool that runs any command line. The model already knows `git`, `grep` and `pytest`, so one line is enough: the cheapest option, and the riskiest, since that tool can run anything. |
 | **Lab 4 CLI agent** | Four tools, each described in one line that you wrote. |
-| **Lab 6 MCP agent** | The same four tools, each with the full input schema the server published. More detail for the model to check its arguments against, and more tokens. |
+| **Lab 6 MCP agent** | The same four tools, each with the full input schema the server published: more to check arguments against, and more tokens. |
 | **x 8 calls** | The same prompt sent on every call of an 8-step run. |
 
 <br><br>
@@ -594,31 +588,25 @@ python agents/measure_prompt.py
 python agents/measure_prompt.py mcp_server/repo_mcp.py mcp_server/git_mcp.py
 ```
 
-> **Expected output:** 7 tools, and the MCP prompt about two-thirds larger than with one server. Every server you connect adds its whole tool list to every model call, whether or not the task uses those tools. With dozens of servers this becomes tens of thousands of tokens per call, which is why MCP clients now load tool descriptions only when needed (covered on the slides).
+> **Expected output:** 7 tools, and the MCP prompt about two-thirds larger. Every connected server adds its whole tool list to every call, used or not. With dozens of servers that is tens of thousands of tokens per call, which is why MCP clients now load tool descriptions only when needed.
+
+![Two servers: the MCP prompt grows](./images/hoa7-6.png?raw=true "Two servers: the MCP prompt grows")
 
 <br><br>
 
-7. Now error handling. On the command line, the tool's own code has to catch a bad value:
-
-```
-python cli_tools/repo_tool.py log-summary --level DEBUG
-```
-
-<br><br>
-
-8. Make the same kind of mistake through MCP (a wrong *type*) and see where it's caught:
+7. Now error handling. In Lab 3 step 4, `repo_tool.py`'s own code caught `--level DEBUG`. Make the same kind of mistake through MCP (a wrong *type*) and see where it's caught:
 
 ```
 python agents/mcp_agent.py "Call search_code with pattern total_value and max_results set to the string 'ten' exactly as written - do not convert it to a number. Then tell me exactly what came back."
 ```
 
-> **Expected output:** a `TOOL ERROR` saying `max_results` must be a valid integer. The schema rejected the call before your Python ran; in step 7 your own code had to catch the bad value. The local model may then retry with `10`, which succeeds.
+> **Expected output:** a `TOOL ERROR` saying `max_results` must be a valid integer. The schema rejected the call before your Python ran; in Lab 3 your own code had to catch the bad value. The local model may then retry with `10`, which succeeds.
 
 ![Schema validation rejects the call](./images/hoa7-7.png?raw=true "Schema validation rejects the call")
 
 <br><br>
 
-9. **What just happened.** The model behaved almost the same with both, because the tools were designed the same way. The differences are in what surrounds the tool: MCP's schemas cost tokens on every call but catch bad arguments before your code runs, and the cost grows with every server you connect. When to pick each:
+8. **What just happened.** The model behaved almost the same with both, because the tools were designed the same way. The differences are in what surrounds the tool: MCP's schemas cost tokens on every call but catch bad arguments before your code runs, and the cost grows with every server you connect. When to pick each:
 - **CLI:** the tool already exists, you're prototyping, or it's one agent on one machine.
 - **MCP:** many clients share the tools, schemas and discovery matter, or tools change independently.
 - **CLI wrapped in MCP:** the CLI is proven, but you want structure and safety on top (Lab 8).
@@ -630,7 +618,7 @@ python agents/mcp_agent.py "Call search_code with pattern total_value and max_re
 </br></br>
 
 <a id="lab8"></a>
-## Lab 8 - Wrapping Git Behind MCP (~10 minutes)
+## Lab 8 - Wrapping Git Behind MCP (~11 minutes)
 
 **Purpose: Put git behind an MCP server with two kinds of tool: narrow ones that each answer one question, and one general tool restricted by rules.**
 
@@ -677,7 +665,7 @@ python agents/mcp_agent.py --server mcp_server/git_mcp.py "What are the three mo
 python agents/mcp_agent.py --server mcp_server/git_mcp.py "Use the git_readonly tool to run the push subcommand and tell me exactly what comes back."
 ```
 
-> **Expected output:** a refusal, with no push and no crash: something like `subcommand 'push' is not allowed`, followed by the allowed list. The model can act on that; it couldn't act on a stack trace.
+> **Expected output:** a refusal, with no push and no crash: something like `subcommand 'push' is not allowed`, followed by the allowed list. The model can act on that; it couldn't act on a stack trace. The local model may leave out `subcommand` here and get schema errors instead (as in step 5); with Groq the refusal shows every time.
 
 ![Guard refusing git push](./images/hoa8-5.png?raw=true "Guard refusing git push")
 
@@ -704,7 +692,7 @@ python agents/mcp_agent.py --server mcp_server/git_mcp.py "Use git_readonly to r
 </br></br>
 
 <a id="lab9"></a>
-## Lab 9 - Guardrails: Policy, Approval, Audit (~10 minutes)
+## Lab 9 - Guardrails: Policy, Approval, Audit (~11 minutes)
 
 **Purpose: Put every tool call through a policy check — an allowlist, argument validation, human approval for anything that changes something, and a log of each decision — all in code, outside the model.**
 

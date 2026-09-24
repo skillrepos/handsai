@@ -623,6 +623,15 @@
         ]
       },
       {
+        "anchor": "\"model_calls\": USAGE[\"model_calls\"],",
+        "lines": 2,
+        "title": "Counting tokens",
+        "note": [
+          "**The model API reports how many tokens each call sent; llm.py adds them up for the run.**",
+          "- prompt tokens include the tool list, which is sent again on every call"
+        ]
+      },
+      {
         "anchor": "path = os.path.join(TRANSCRIPTS, f\"{run['label']}_transcript.md\")",
         "lines": 1,
         "title": "Transcripts to compare",
